@@ -6,6 +6,7 @@ import com.example.projectmanagement.service.UserService;
 import com.example.projectmanagement.utils.JwtUtils;
 import com.example.projectmanagement.utils.LogUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 

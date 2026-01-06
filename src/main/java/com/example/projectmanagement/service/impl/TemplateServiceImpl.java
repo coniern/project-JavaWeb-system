@@ -9,18 +9,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.nio.file.*;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * 项目模板服务实现类
@@ -28,6 +31,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class TemplateServiceImpl extends ServiceImpl<TemplateMapper, Template> implements TemplateService {
+
+    private static final Logger log = LoggerFactory.getLogger(TemplateServiceImpl.class);
 
     @Autowired
     private TemplateMapper templateMapper;
@@ -61,7 +66,7 @@ public class TemplateServiceImpl extends ServiceImpl<TemplateMapper, Template> i
         // 获取模板信息
         Template template = getById(templateId);
         if (template == null) {
-            throw new FileNotFoundException("模板不存在: " + templateId);
+            throw new IOException("模板不存在: " + templateId);
         }
 
         // 解析模板配置
@@ -225,16 +230,6 @@ public class TemplateServiceImpl extends ServiceImpl<TemplateMapper, Template> i
         Path resourcesPath = projectPath.resolve("src/main/resources");
         Files.createDirectories(resourcesPath);
         
-        // 创建pom.xml
-        createPomXml(projectPath.resolve("pom.xml"), projectName, description, packageName);
-        
-        // 创建application.yml
-        createApplicationYml(resourcesPath.resolve("application.yml"), port);
-        
-        // 创建主启动类
-        String mainClassName = capitalizeFirstLetter(projectName) + "Application";
-        createSpringBootApplicationClass(javaSrcPath.resolve(mainClassName + ".java"), packageName, mainClassName);
-        
         // 创建.gitignore文件
         createGitignore(projectPath.resolve(".gitignore"));
     }
@@ -245,7 +240,6 @@ public class TemplateServiceImpl extends ServiceImpl<TemplateMapper, Template> i
     private void generateSsmProject(Path projectPath, Map<String, Object> projectInfo) throws IOException {
         String projectName = (String) projectInfo.getOrDefault("projectName", "ssm-project");
         String packageName = (String) projectInfo.getOrDefault("packageName", "com.example.project");
-        String description = (String) projectInfo.getOrDefault("description", "SSM Project");
         
         // 创建src/main/java目录
         Path javaSrcPath = projectPath.resolve("src/main/java").resolve(packageName.replace('.', '/'));
@@ -258,21 +252,6 @@ public class TemplateServiceImpl extends ServiceImpl<TemplateMapper, Template> i
         // 创建webapp/WEB-INF目录
         Path webappPath = projectPath.resolve("src/main/webapp/WEB-INF");
         Files.createDirectories(webappPath);
-        
-        // 创建pom.xml
-        createSsmPomXml(projectPath.resolve("pom.xml"), projectName, description, packageName);
-        
-        // 创建mybatis-config.xml
-        createMybatisConfigXml(resourcesPath.resolve("mybatis-config.xml"));
-        
-        // 创建spring-mvc.xml
-        createSpringMvcXml(webappPath.resolve("spring-mvc.xml"), packageName);
-        
-        // 创建applicationContext.xml
-        createApplicationContextXml(webappPath.resolve("applicationContext.xml"), packageName);
-        
-        // 创建web.xml
-        createWebXml(webappPath.resolve("web.xml"));
         
         // 创建.gitignore文件
         createGitignore(projectPath.resolve(".gitignore"));
@@ -304,7 +283,7 @@ public class TemplateServiceImpl extends ServiceImpl<TemplateMapper, Template> i
                 }
                 
                 // 获取相对路径
-                String relativePath = projectPath.relativize(file).toString();
+                String relativePath = Paths.get(projectPath).relativize(file).toString();
                 
                 ObjectNode fileNode = objectMapper.createObjectNode();
                 fileNode.put("path", relativePath);
@@ -322,50 +301,47 @@ public class TemplateServiceImpl extends ServiceImpl<TemplateMapper, Template> i
         return templateConfig;
     }
 
-    // 以下是各种文件创建的辅助方法
-    
-    private void createPomXml(Path filePath, String projectName, String description, String packageName) throws IOException {
-        String pomContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n    xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n    <modelVersion>4.0.0</modelVersion>\n    <parent>\n        <groupId>org.springframework.boot</groupId>\n        <artifactId>spring-boot-starter-parent</artifactId>\n        <version>2.7.5</version>\n        <relativePath/> <!-- lookup parent from repository -->\n    </parent>\n    <groupId>" + packageName + "</groupId>\n    <artifactId>" + projectName + "</artifactId>\n    <version>0.0.1-SNAPSHOT</version>\n    <name>" + projectName + "</name>\n    <description>" + description + "</description>\n    <properties>\n        <java.version>1.8</java.version>\n    </properties>\n    <dependencies>\n        <dependency>\n            <groupId>org.springframework.boot</groupId>\n            <artifactId>spring-boot-starter-web</artifactId>\n        </dependency>\n\n        <dependency>\n            <groupId>org.springframework.boot</groupId>\n            <artifactId>spring-boot-starter-test</artifactId>\n            <scope>test</scope>\n        </dependency>\n    </dependencies>\n\n    <build>\n        <plugins>\n            <plugin>\n                <groupId>org.springframework.boot</groupId>\n                <artifactId>spring-boot-maven-plugin</artifactId>\n            </plugin>\n        </plugins>\n    </build>\n\n</project>";
-        Files.writeString(filePath, pomContent);
-    }
-
-    private void createApplicationYml(Path filePath, String port) throws IOException {
-        String ymlContent = "server:\n  port: " + port + "\n\nspring:\n  application:\n    name: spring-boot-project\n\n# 数据库配置示例\n# spring:\n#  datasource:\n#    url: jdbc:mysql://localhost:3306/testdb?useSSL=false&serverTimezone=UTC\n#    username: root\n#    password: password\n#    driver-class-name: com.mysql.cj.jdbc.Driver\n\n# MyBatis配置示例\n# mybatis:\n#  mapper-locations: classpath:mapper/*.xml\n#  type-aliases-package: " + ("com.example.project") + ".entity";\n        Files.writeString(filePath, ymlContent);
-    }
-
-    private void createSpringBootApplicationClass(Path filePath, String packageName, String className) throws IOException {
-        String classContent = "package " + packageName + ";\n\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\n\n@SpringBootApplication\npublic class " + className + " {\n\n    public static void main(String[] args) {\n        SpringApplication.run(" + className + ".class, args);\n    }\n\n}";
-        Files.writeString(filePath, classContent);
-    }
-
-    private void createSsmPomXml(Path filePath, String projectName, String description, String packageName) throws IOException {
-        String pomContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n    xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n    <modelVersion>4.0.0</modelVersion>\n    <groupId>" + packageName + "</groupId>\n    <artifactId>" + projectName + "</artifactId>\n    <version>0.0.1-SNAPSHOT</version>\n    <packaging>war</packaging>\n    <name>" + projectName + "</name>\n    <description>" + description + "</description>\n    <properties>\n        <java.version>1.8</java.version>\n        <spring.version>5.3.23</spring.version>\n        <mybatis.version>3.5.11</mybatis.version>\n        <mybatis-spring.version>2.0.7</mybatis-spring.version>\n    </properties>\n    <dependencies>\n        <!-- Spring -->\n        <dependency>\n            <groupId>org.springframework</groupId>\n            <artifactId>spring-context</artifactId>\n            <version>${spring.version}</version>\n        </dependency>\n        <dependency>\n            <groupId>org.springframework</groupId>\n            <artifactId>spring-web</artifactId>\n            <version>${spring.version}</version>\n        </dependency>\n        <dependency>\n            <groupId>org.springframework</groupId>\n            <artifactId>spring-webmvc</artifactId>\n            <version>${spring.version}</version>\n        </dependency>\n        <dependency>\n            <groupId>org.springframework</groupId>\n            <artifactId>spring-jdbc</artifactId>\n            <version>${spring.version}</version>\n        </dependency>\n\n        <!-- MyBatis -->\n        <dependency>\n            <groupId>org.mybatis</groupId>\n            <artifactId>mybatis</artifactId>\n            <version>${mybatis.version}</version>\n        </dependency>\n        <dependency>\n            <groupId>org.mybatis</groupId>\n            <artifactId>mybatis-spring</artifactId>\n            <version>${mybatis-spring.version}</version>\n        </dependency>\n\n        <!-- 数据库驱动 -->\n        <dependency>\n            <groupId>mysql</groupId>\n            <artifactId>mysql-connector-java</artifactId>\n            <version>8.0.31</version>\n        </dependency>\n\n        <!-- 其他依赖 -->\n        <dependency>\n            <groupId>javax.servlet</groupId>\n            <artifactId>javax.servlet-api</artifactId>\n            <version>4.0.1</version>\n            <scope>provided</scope>\n        </dependency>\n        <dependency>\n            <groupId>com.fasterxml.jackson.core</groupId>\n            <artifactId>jackson-databind</artifactId>\n            <version>2.13.4.2</version>\n        </dependency>\n    </dependencies>\n\n    <build>\n        <plugins>\n            <plugin>\n                <groupId>org.apache.maven.plugins</groupId>\n                <artifactId>maven-compiler-plugin</artifactId>\n                <version>3.8.1</version>\n                <configuration>\n                    <source>1.8</source>\n                    <target>1.8</target>\n                </configuration>\n            </plugin>\n            <plugin>\n                <groupId>org.apache.maven.plugins</groupId>\n                <artifactId>maven-war-plugin</artifactId>\n                <version>3.3.2</version>\n                <configuration>\n                    <failOnMissingWebXml>false</failOnMissingWebXml>\n                </configuration>\n            </plugin>\n        </plugins>\n    </build>\n\n</project>";\n        Files.writeString(filePath, pomContent);
-    }
-
-    private void createMybatisConfigXml(Path filePath) throws IOException {
-        String content = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>
-<!DOCTYPE configuration\n        PUBLIC \"-//mybatis.org//DTD Config 3.0//EN\"\n        \"http://mybatis.org/dtd/mybatis-3-config.dtd\">\n<configuration>\n    <settings>\n        <!-- 开启驼峰命名转换 -->\n        <setting name=\"mapUnderscoreToCamelCase\" value=\"true\"/>\n        <!-- 开启日志 -->\n        <setting name=\"logImpl\" value=\"STDOUT_LOGGING\"/>\n    </settings>\n    \n    <!-- 类型别名配置 -->\n    <typeAliases>\n        <package name=\"com.example.project.entity\"/>\n    </typeAliases>\n    \n    <!-- 映射器配置 -->\n    <mappers>\n        <package name=\"com.example.project.mapper\"/>\n    </mappers>\n</configuration>";\n        Files.writeString(filePath, content);
-    }
-
-    private void createSpringMvcXml(Path filePath, String packageName) throws IOException {
-        String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<beans xmlns=\"http://www.springframework.org/schema/beans\"\n       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n       xmlns:context=\"http://www.springframework.org/schema/context\"\n       xmlns:mvc=\"http://www.springframework.org/schema/mvc\"\n       xsi:schemaLocation=\"http://www.springframework.org/schema/beans\n        http://www.springframework.org/schema/beans/spring-beans.xsd\n        http://www.springframework.org/schema/context\n        http://www.springframework.org/schema/context/spring-context.xsd\n        http://www.springframework.org/schema/mvc\n        http://www.springframework.org/schema/mvc/spring-mvc.xsd\">\n\n    <!-- 扫描控制器 -->\n    <context:component-scan base-package=\"" + packageName + ".controller\"/>\n    \n    <!-- 开启MVC注解驱动 -->\n    <mvc:annotation-driven/>\n    \n    <!-- 静态资源处理 -->\n    <mvc:default-servlet-handler/>\n    \n    <!-- 视图解析器 -->\n    <bean class=\"org.springframework.web.servlet.view.InternalResourceViewResolver\">\n        <property name=\"prefix\" value=\"/WEB-INF/views/\"/>\n        <property name=\"suffix\" value=\".jsp\"/>\n    </bean>\n</beans>";\n        Files.writeString(filePath, content);
-    }
-
-    private void createApplicationContextXml(Path filePath, String packageName) throws IOException {
-        String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<beans xmlns=\"http://www.springframework.org/schema/beans\"\n       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n       xmlns:context=\"http://www.springframework.org/schema/context\"\n       xsi:schemaLocation=\"http://www.springframework.org/schema/beans\n        http://www.springframework.org/schema/beans/spring-beans.xsd\n        http://www.springframework.org/schema/context\n        http://www.springframework.org/schema/context/spring-context.xsd\">\n\n    <!-- 扫描Service和Dao -->\n    <context:component-scan base-package=\"" + packageName + ".service\", \"" + packageName + ".mapper\"/>\n    \n    <!-- 加载属性文件 -->\n    <context:property-placeholder location=\"classpath:jdbc.properties\"/>\n    \n    <!-- 配置数据源 -->\n    <bean id=\"dataSource\" class=\"org.springframework.jdbc.datasource.DriverManagerDataSource\">\n        <property name=\"driverClassName\" value=\"${jdbc.driver}\"/>\n        <property name=\"url\" value=\"${jdbc.url}\"/>\n        <property name=\"username\" value=\"${jdbc.username}\"/>\n        <property name=\"password\" value=\"${jdbc.password}\"/>\n    </bean>\n    \n    <!-- 配置SqlSessionFactory -->\n    <bean id=\"sqlSessionFactory\" class=\"org.mybatis.spring.SqlSessionFactoryBean\">\n        <property name=\"dataSource\" ref=\"dataSource\"/>\n        <property name=\"configLocation\" value=\"classpath:mybatis-config.xml\"/>\n        <property name=\"mapperLocations\" value=\"classpath:mapper/*.xml\"/>\n    </bean>\n    \n    <!-- 配置Mapper扫描器 -->\n    <bean class=\"org.mybatis.spring.mapper.MapperScannerConfigurer\">\n        <property name=\"basePackage\" value=\"" + packageName + ".mapper\"/>\n        <property name=\"sqlSessionFactoryBeanName\" value=\"sqlSessionFactory\"/>\n    </bean>\n</beans>";\n        Files.writeString(filePath, content);
-    }
-
-    private void createWebXml(Path filePath) throws IOException {
-        String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<web-app xmlns=\"http://xmlns.jcp.org/xml/ns/javaee\"\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd\"\n         version=\"4.0\">\n\n    <!-- Spring配置文件 -->\n    <context-param>\n        <param-name>contextConfigLocation</param-name>\n        <param-value>/WEB-INF/applicationContext.xml</param-value>\n    </context-param>\n\n    <!-- Spring监听器 -->\n    <listener>\n        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>\n    </listener>\n\n    <!-- SpringMVC前端控制器 -->\n    <servlet>\n        <servlet-name>dispatcher</servlet-name>\n        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>\n        <init-param>\n            <param-name>contextConfigLocation</param-name>\n            <param-value>/WEB-INF/spring-mvc.xml</param-value>\n        </init-param>\n        <load-on-startup>1</load-on-startup>\n    </servlet>\n\n    <!-- Servlet映射 -->\n    <servlet-mapping>\n        <servlet-name>dispatcher</servlet-name>\n        <url-pattern>/</url-pattern>\n    </servlet-mapping>\n\n    <!-- 字符编码过滤器 -->\n    <filter>\n        <filter-name>encodingFilter</filter-name>\n        <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>\n        <init-param>\n            <param-name>encoding</param-name>\n            <param-value>UTF-8</param-value>\n        </init-param>\n        <init-param>\n            <param-name>forceEncoding</param-name>\n            <param-value>true</param-value>\n        </init-param>\n    </filter>\n    <filter-mapping>\n        <filter-name>encodingFilter</filter-name>\n        <url-pattern>/*</url-pattern>\n    </filter-mapping>\n</web-app>";\n        Files.writeString(filePath, content);
-    }
-
+    /**
+     * 创建.gitignore文件
+     */
     private void createGitignore(Path filePath) throws IOException {
-        String content = "# Logs\nlogs\n*.log\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\npnpm-debug.log*\nlerna-debug.log*\n\nnode_modules\ndist\ndist-ssr\n*.local\n\n# Editor directories and files\n.vscode/*\n!.vscode/extensions.json\n.idea\n.DS_Store\n*.suo\n*.ntvs*\n*.njsproj\n*.sln\n*.sw?\n\n# Maven\ntarget/\n\n# Gradle\nbuild/\n.gradle/\n\n# OS generated files\nThumbs.db\n.DS_Store\n\n# Environment variables\n.env\n.env.local\n.env.development.local\n.env.test.local\n.env.production.local";\n        Files.writeString(filePath, content);
+        String content = "# Logs\n" +
+                "logs\n" +
+                "*.log\n" +
+                "npm-debug.log*\n" +
+                "yarn-debug.log*\n" +
+                "yarn-error.log*\n" +
+                "pnpm-debug.log*\n" +
+                "lerna-debug.log*\n\n" +
+                "node_modules\n" +
+                "dist\n" +
+                "dist-ssr\n" +
+                "*.local\n\n" +
+                "# Editor directories and files\n" +
+                ".vscode/*\n" +
+                "!.vscode/extensions.json\n" +
+                ".idea\n" +
+                ".DS_Store\n" +
+                "*.suo\n" +
+                "*.ntvs*\n" +
+                "*.njsproj\n" +
+                "*.sln\n" +
+                "*.sw?\n\n" +
+                "# Maven\n" +
+                "target/\n\n" +
+                "# Gradle\n" +
+                "build/\n" +
+                ".gradle/\n\n" +
+                "# OS generated files\n" +
+                "Thumbs.db\n" +
+                ".DS_Store\n\n" +
+                "# Environment variables\n" +
+                ".env\n" +
+                ".env.local\n" +
+                ".env.development.local\n" +
+                ".env.test.local\n" +
+                ".env.production.local";
+        Files.writeString(filePath, content);
     }
 
     // 工具方法

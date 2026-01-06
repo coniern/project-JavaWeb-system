@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
@@ -54,11 +54,17 @@ public class ProjectMemberController extends BaseController {
         // 验证角色参数
         validateRole(request.getRole());
         
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) {
+            return error("当前用户未登录");
+        }
+        
         // 添加成员
         boolean result = projectMemberService.addMember(
                 request.getProjectId(), 
                 request.getUserId(), 
-                request.getRole());
+                request.getRole(),
+                currentUserId);
         
         if (!result) {
             return error("添加成员失败");
@@ -70,17 +76,27 @@ public class ProjectMemberController extends BaseController {
     /**
      * 更新项目成员角色
      */
-    @PutMapping("/{id}")
+    @PutMapping("/{projectId}/{userId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
     public ApiResponse<Boolean> updateProjectMemberRole(
-            @PathVariable Long id,
+            @PathVariable Long projectId,
+            @PathVariable Long userId,
             @Valid @RequestBody UpdateRoleRequest request) {
         
         // 验证角色参数
         validateRole(request.getRole());
         
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) {
+            return error("当前用户未登录");
+        }
+        
         // 更新角色
-        boolean result = projectMemberService.updateMemberRole(id, request.getRole());
+        boolean result = projectMemberService.updateMemberRole(
+                projectId, 
+                userId, 
+                request.getRole(),
+                currentUserId);
         
         if (!result) {
             return error("更新角色失败");
@@ -92,11 +108,18 @@ public class ProjectMemberController extends BaseController {
     /**
      * 移除项目成员
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{projectId}/{userId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
-    public ApiResponse<Boolean> removeProjectMember(@PathVariable Long id) {
+    public ApiResponse<Boolean> removeProjectMember(
+            @PathVariable Long projectId,
+            @PathVariable Long userId) {
         
-        boolean result = projectMemberService.removeMember(id);
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) {
+            return error("当前用户未登录");
+        }
+        
+        boolean result = projectMemberService.removeMember(projectId, userId, currentUserId);
         
         if (!result) {
             return error("移除成员失败");
@@ -143,7 +166,7 @@ public class ProjectMemberController extends BaseController {
     }
     
     // 添加项目成员请求参数类
-    static class ProjectMemberRequest {
+    public static class ProjectMemberRequest {
         private Long projectId;
         private Long userId;
         private String role;
@@ -158,7 +181,7 @@ public class ProjectMemberController extends BaseController {
     }
     
     // 更新角色请求参数类
-    static class UpdateRoleRequest {
+    public static class UpdateRoleRequest {
         private String role;
         
         // getter和setter

@@ -3,13 +3,17 @@ package com.example.projectmanagement.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.Project;
+import com.example.projectmanagement.entity.User;
 import com.example.projectmanagement.service.ProjectService;
+import com.example.projectmanagement.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -23,6 +27,9 @@ public class ProjectController extends BaseController {
     
     @Autowired
     private ProjectService projectService;
+    
+    @Autowired
+    private UserService userService;
     
     /**
      * 创建项目
@@ -110,11 +117,12 @@ public class ProjectController extends BaseController {
      * 更新项目信息
      * @param id 项目ID
      * @param project 项目信息
+     * @param authentication 认证信息
      * @return 更新结果
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
-    public ApiResponse<Project> updateProject(@PathVariable Long id, @Valid @RequestBody Project project) {
+    public ApiResponse<Project> updateProject(@PathVariable Long id, @Valid @RequestBody Project project, Authentication authentication) {
         // 确保ID一致
         project.setProjectId(id);
         
@@ -124,8 +132,8 @@ public class ProjectController extends BaseController {
             return error("技术栈只能选择：Spring Boot, SSM, Spring Cloud");
         }
         
-        // 获取当前登录用户ID（这里假设从Security上下文中获取）
-        Long currentUserId = 1L; // 临时值，实际应该从上下文中获取
+        // 从Security上下文获取当前登录用户ID
+        Long currentUserId = getCurrentUserId();
         
         if (projectService.updateProject(project, currentUserId)) {
             return success(project);
@@ -137,13 +145,14 @@ public class ProjectController extends BaseController {
     /**
      * 删除项目
      * @param id 项目ID
+     * @param authentication 认证信息
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Void> deleteProject(@PathVariable Long id) {
-        // 获取当前登录用户ID（这里假设从Security上下文中获取）
-        Long currentUserId = 1L; // 临时值，实际应该从上下文中获取
+    public ApiResponse<Void> deleteProject(@PathVariable Long id, Authentication authentication) {
+        // 从Security上下文获取当前登录用户ID
+        Long currentUserId = getCurrentUserId();
         
         if (projectService.deleteProject(id, currentUserId)) {
             return success();

@@ -1,5 +1,6 @@
 package com.example.projectmanagement.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.projectmanagement.entity.Deployment;
@@ -12,6 +13,8 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -30,6 +34,8 @@ import java.util.UUID;
  */
 @Service
 public class DeploymentServiceImpl extends ServiceImpl<DeploymentMapper, Deployment> implements DeploymentService {
+    
+    private static final Logger log = LoggerFactory.getLogger(DeploymentServiceImpl.class);
     
     @Autowired
     private DeploymentMapper deploymentMapper;
@@ -199,7 +205,7 @@ public class DeploymentServiceImpl extends ServiceImpl<DeploymentMapper, Deploym
     /**
      * 执行部署流程
      */
-    private void executeDeployProcess(EnvironmentConfig envConfig, String filePath, Long deployId) throws JSchException {
+    private void executeDeployProcess(EnvironmentConfig envConfig, String filePath, Long deployId) throws JSchException, IOException {
         JSch jsch = new JSch();
         Session session = null;
         
@@ -212,6 +218,8 @@ public class DeploymentServiceImpl extends ServiceImpl<DeploymentMapper, Deploym
                 session.setPassword(envConfig.getSshPassword());
             } else if (!StringUtils.isEmpty(envConfig.getSshKeyPath())) {
                 jsch.addIdentity(envConfig.getSshKeyPath());
+            } else {
+                throw new IllegalArgumentException("SSH连接配置不完整，缺少密码或密钥路径");
             }
             
             Properties config = new Properties();
@@ -243,21 +251,41 @@ public class DeploymentServiceImpl extends ServiceImpl<DeploymentMapper, Deploym
             addDeploymentLog(deployId, "部署成功！");
             updateDeploymentStatus(deployId, "success");
             
+        } catch (JSchException e) {
+            addDeploymentLog(deployId, "SSH连接失败：" + e.getMessage());
+            handleDeploymentFailure(deployId, e);
+            throw e;
+        } catch (IOException e) {
+            addDeploymentLog(deployId, "IO操作失败：" + e.getMessage());
+            handleDeploymentFailure(deployId, e);
+            throw e;
         } catch (Exception e) {
             addDeploymentLog(deployId, "部署失败：" + e.getMessage());
-            
-            // 调用AI分析模块分析错误原因并提供解决方案
-            Deployment deployment = getById(deployId);
-            String aiSuggestion = AiDeploymentHelper.analyzeDeploymentLog(deployment.getLog());
-            deployment.setAiSuggestion(aiSuggestion);
-            updateById(deployment);
-            
-            updateDeploymentStatus(deployId, "failed");
+            handleDeploymentFailure(deployId, e);
             throw e;
         } finally {
             if (session != null && session.isConnected()) {
                 session.disconnect();
             }
+        }
+    }
+    
+    /**
+     * 处理部署失败的情况
+     */
+    private void handleDeploymentFailure(Long deployId, Exception e) {
+        try {
+            // 调用AI分析模块分析错误原因并提供解决方案
+            Deployment deployment = getById(deployId);
+            if (deployment != null) {
+                String aiSuggestion = AiDeploymentHelper.analyzeDeploymentLog(deployment.getLog());
+                deployment.setAiSuggestion(aiSuggestion);
+                updateById(deployment);
+            }
+        } catch (Exception ex) {
+            log.error("AI分析部署失败异常: {}", ex.getMessage());
+        } finally {
+            updateDeploymentStatus(deployId, "failed");
         }
     }
     

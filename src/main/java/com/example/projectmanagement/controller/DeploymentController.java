@@ -3,11 +3,17 @@ package com.example.projectmanagement.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.Deployment;
+import com.example.projectmanagement.entity.User;
 import com.example.projectmanagement.service.DeploymentService;
+import com.example.projectmanagement.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * 部署Controller
@@ -19,6 +25,9 @@ public class DeploymentController extends BaseController {
     
     @Autowired
     private DeploymentService deploymentService;
+    
+    @Autowired
+    private UserService userService;
     
     /**
      * 获取部署历史列表
@@ -91,8 +100,11 @@ public class DeploymentController extends BaseController {
             return error("请上传部署包文件");
         }
         
-        // 获取当前登录用户ID（这里假设从Security上下文中获取）
-        Long deployerId = 1L; // 临时值，实际应该从上下文中获取
+        // 从Security上下文获取当前登录用户ID
+        Long deployerId = getCurrentUserId();
+        if (deployerId == null) {
+            return error("用户未登录");
+        }
         
         Long deployId = deploymentService.executeDeployment(projectId, env, version, file, deployerId);
         if (deployId == null) {

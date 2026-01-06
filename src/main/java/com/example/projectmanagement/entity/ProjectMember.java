@@ -3,7 +3,6 @@ package com.example.projectmanagement.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
@@ -13,7 +12,6 @@ import java.time.LocalDateTime;
  * 项目成员实体类
  * 用于存储项目和用户之间的关联关系
  */
-@Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("project_member")
 public class ProjectMember implements Serializable {
@@ -36,4 +34,53 @@ public class ProjectMember implements Serializable {
 
     // 更新时间
     private LocalDateTime updateTime;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
 }

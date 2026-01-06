@@ -6,6 +6,7 @@ import com.example.projectmanagement.mapper.UserMapper;
 import com.example.projectmanagement.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ import java.util.List;
  * 实现用户相关的业务逻辑
  */
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService, UserDetailsService {
     
     @Autowired
     private UserMapper userMapper;
@@ -71,7 +72,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         
         // 加载用户角色
-        List<String> roles = findRolesByUserId(user.getId());
+        List<String> roleCodes = findRolesByUserId(user.getId());
         // 这里可以根据需要设置用户的权限信息
         
         return user;

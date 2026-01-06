@@ -1,6 +1,7 @@
 package com.example.projectmanagement.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.Template;
 import com.example.projectmanagement.service.TemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/templates")
-public class TemplateController {
+public class TemplateController extends BaseController {
 
     @Autowired
     private TemplateService templateService;
@@ -31,16 +32,16 @@ public class TemplateController {
      * @return 模板分页列表
      */
     @GetMapping("/page")
-    public Result page(@RequestParam(defaultValue = "1") Integer pageNum,
+    public ApiResponse<Page<Template>> page(@RequestParam(defaultValue = "1") Integer pageNum,
                       @RequestParam(defaultValue = "10") Integer pageSize,
                       @RequestParam(required = false) String templateName,
                       @RequestParam(required = false) String templateType,
                       @RequestParam(required = false) Boolean isSystem) {
         try {
             Page<Template> page = templateService.findPage(pageNum, pageSize, templateName, templateType, isSystem);
-            return Result.success(page);
+            return success(page);
         } catch (Exception e) {
-            return Result.error("查询模板列表失败: " + e.getMessage());
+            return error("查询模板列表失败: " + e.getMessage());
         }
     }
 
@@ -50,15 +51,15 @@ public class TemplateController {
      * @return 模板详情
      */
     @GetMapping("/{templateId}")
-    public Result getTemplate(@PathVariable Long templateId) {
+    public ApiResponse<Template> getTemplate(@PathVariable Long templateId) {
         try {
             Template template = templateService.getById(templateId);
             if (template == null) {
-                return Result.error("模板不存在");
+                return error("模板不存在");
             }
-            return Result.success(template);
+            return success(template);
         } catch (Exception e) {
-            return Result.error("获取模板详情失败: " + e.getMessage());
+            return error("获取模板详情失败: " + e.getMessage());
         }
     }
 
@@ -68,24 +69,28 @@ public class TemplateController {
      * @return 创建结果
      */
     @PostMapping
-    public Result createTemplate(@RequestBody Map<String, Object> params) {
+    public ApiResponse<Template> createTemplate(@RequestBody Map<String, Object> params) {
         try {
             Template template = new Template();
-            template.setTemplateName((String) params.get("templateName"));
-            template.setDescription((String) params.get("description"));
-            template.setTemplateType((String) params.get("templateType"));
-            template.setCreateUserId(((Number) params.get("createUserId")).longValue());
+            template.setTemplateName(String.valueOf(params.get("templateName")));
+            template.setDescription(String.valueOf(params.get("description")));
+            template.setTemplateType(String.valueOf(params.get("templateType")));
             
-            String projectPath = (String) params.get("projectPath");
+            Object createUserIdObj = params.get("createUserId");
+            if (createUserIdObj != null) {
+                template.setCreateUserId(Long.valueOf(createUserIdObj.toString()));
+            }
+            
+            String projectPath = String.valueOf(params.get("projectPath"));
             boolean result = templateService.saveCustomTemplate(template, projectPath);
             
             if (result) {
-                return Result.success(template);
+                return success(template);
             } else {
-                return Result.error("创建模板失败");
+                return error("创建模板失败");
             }
         } catch (Exception e) {
-            return Result.error("创建模板失败: " + e.getMessage());
+            return error("创建模板失败: " + e.getMessage());
         }
     }
 
@@ -95,16 +100,16 @@ public class TemplateController {
      * @return 更新结果
      */
     @PutMapping
-    public Result updateTemplate(@RequestBody Template template) {
+    public ApiResponse<Template> updateTemplate(@RequestBody Template template) {
         try {
             boolean result = templateService.updateById(template);
             if (result) {
-                return Result.success(template);
+                return success(template);
             } else {
-                return Result.error("更新模板失败");
+                return error("更新模板失败");
             }
         } catch (Exception e) {
-            return Result.error("更新模板失败: " + e.getMessage());
+            return error("更新模板失败: " + e.getMessage());
         }
     }
 
@@ -114,26 +119,26 @@ public class TemplateController {
      * @return 删除结果
      */
     @DeleteMapping("/{templateId}")
-    public Result deleteTemplate(@PathVariable Long templateId) {
+    public ApiResponse<Void> deleteTemplate(@PathVariable Long templateId) {
         try {
             Template template = templateService.getById(templateId);
             if (template == null) {
-                return Result.error("模板不存在");
+                return error("模板不存在");
             }
             
             // 系统预设模板不允许删除
             if (template.getIsSystem() != null && template.getIsSystem()) {
-                return Result.error("系统预设模板不允许删除");
+                return error("系统预设模板不允许删除");
             }
             
             boolean result = templateService.removeById(templateId);
             if (result) {
-                return Result.success("删除成功");
+                return success();
             } else {
-                return Result.error("删除失败");
+                return error("删除失败");
             }
         } catch (Exception e) {
-            return Result.error("删除模板失败: " + e.getMessage());
+            return error("删除模板失败: " + e.getMessage());
         }
     }
 
@@ -143,18 +148,18 @@ public class TemplateController {
      * @return 生成的项目路径
      */
     @PostMapping("/generate-project")
-    public Result generateProject(@RequestBody Map<String, Object> params) {
+    public ApiResponse<String> generateProject(@RequestBody Map<String, Object> params) {
         try {
-            Long templateId = ((Number) params.get("templateId")).longValue();
+            Long templateId = Long.valueOf(params.get("templateId").toString());
             Map<String, Object> projectInfo = (Map<String, Object>) params.get("projectInfo");
-            String targetPath = (String) params.get("targetPath");
+            String targetPath = String.valueOf(params.get("targetPath"));
             
             Path projectPath = templateService.generateProjectFromTemplate(templateId, projectInfo, targetPath);
-            return Result.success(projectPath.toString());
+            return success(projectPath.toString());
         } catch (IOException e) {
-            return Result.error("生成项目失败: " + e.getMessage());
+            return error("生成项目失败: " + e.getMessage());
         } catch (Exception e) {
-            return Result.error("生成项目失败: " + e.getMessage());
+            return error("生成项目失败: " + e.getMessage());
         }
     }
 
@@ -164,12 +169,12 @@ public class TemplateController {
      * @return 推荐模板
      */
     @GetMapping("/recommended/{templateType}")
-    public Result getRecommendedTemplate(@PathVariable String templateType) {
+    public ApiResponse<Template> getRecommendedTemplate(@PathVariable String templateType) {
         try {
             Template template = templateService.getRecommendedTemplate(templateType);
-            return Result.success(template);
+            return success(template);
         } catch (Exception e) {
-            return Result.error("获取推荐模板失败: " + e.getMessage());
+            return error("获取推荐模板失败: " + e.getMessage());
         }
     }
 
@@ -178,60 +183,12 @@ public class TemplateController {
      * @return 初始化结果
      */
     @PostMapping("/init-system-templates")
-    public Result initSystemTemplates() {
+    public ApiResponse<Void> initSystemTemplates() {
         try {
             templateService.initSystemTemplates();
-            return Result.success("系统模板初始化成功");
+            return success();
         } catch (Exception e) {
-            return Result.error("系统模板初始化失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 自定义结果类，用于统一API响应格式
-     */
-    public static class Result {
-        private int code;
-        private String message;
-        private Object data;
-
-        public Result(int code, String message, Object data) {
-            this.code = code;
-            this.message = message;
-            this.data = data;
-        }
-
-        public static Result success(Object data) {
-            return new Result(200, "success", data);
-        }
-
-        public static Result error(String message) {
-            return new Result(500, message, null);
-        }
-
-        // getter and setter
-        public int getCode() {
-            return code;
-        }
-
-        public void setCode(int code) {
-            this.code = code;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
-
-        public Object getData() {
-            return data;
-        }
-
-        public void setData(Object data) {
-            this.data = data;
+            return error("系统模板初始化失败: " + e.getMessage());
         }
     }
 }

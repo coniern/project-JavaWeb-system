@@ -62,14 +62,14 @@ public class CustomDeployFlowServiceImpl extends ServiceImpl<CustomDeployFlowMap
         // 先将所有该项目的流程设置为非默认
         List<CustomDeployFlow> flows = customDeployFlowMapper.findByProjectId(projectId);
         for (CustomDeployFlow flow : flows) {
-            flow.setDefault(false);
+            flow.setIsDefault(false);
             updateById(flow);
         }
         
         // 再将指定流程设置为默认
         CustomDeployFlow targetFlow = getById(flowId);
         if (targetFlow != null && targetFlow.getProjectId().equals(projectId)) {
-            targetFlow.setDefault(true);
+            targetFlow.setIsDefault(true);
             return updateById(targetFlow);
         }
         return false;
@@ -88,7 +88,7 @@ public class CustomDeployFlowServiceImpl extends ServiceImpl<CustomDeployFlowMap
         execution.setStartTime(LocalDateTime.now());
         execution.setDeployerId(deployerId);
         
-        if (!flowExecutionMapper.insert(execution)) {
+        if (flowExecutionMapper.insert(execution) == 0) {
             return null;
         }
         

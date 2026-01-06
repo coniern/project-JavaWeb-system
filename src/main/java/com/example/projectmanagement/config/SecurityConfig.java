@@ -1,18 +1,17 @@
 package com.example.projectmanagement.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.example.projectmanagement.filter.JwtAuthenticationFilter;
 import com.example.projectmanagement.handler.JwtAuthenticationEntryPoint;
 import com.example.projectmanagement.handler.JwtAccessDeniedHandler;
 
@@ -25,17 +24,17 @@ import com.example.projectmanagement.handler.JwtAccessDeniedHandler;
 @EnableMethodSecurity
 public class SecurityConfig {
     
-    @Autowired
-    private UserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    
-    @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    
-    @Autowired
-    private JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                         JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                         JwtAccessDeniedHandler jwtAccessDeniedHandler) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
+    }
     
     /**
      * 密码编码器
@@ -49,10 +48,8 @@ public class SecurityConfig {
      * 认证管理器
      */
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
-        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-        return auth.build();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
     
     /**

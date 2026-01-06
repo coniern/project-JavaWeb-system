@@ -134,4 +134,11 @@ public class AiDeploymentHelper {
     public static Map<String, String> getAllSolutions() {
         return new HashMap<>(ERROR_SOLUTION_MAP);
     }
+    
+    /**
+     * 获取常见错误解决方案
+     */
+    public static Map<String, String> getCommonErrors() {
+        return getAllSolutions();
+    }
 }

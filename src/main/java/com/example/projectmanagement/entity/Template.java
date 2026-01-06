@@ -3,7 +3,6 @@ package com.example.projectmanagement.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
 
 import java.time.LocalDateTime;
 
@@ -11,7 +10,6 @@ import java.time.LocalDateTime;
  * 项目模板实体类
  * 用于存储项目模板的基本信息
  */
-@Data
 @TableName("template")
 public class Template {
 
@@ -64,4 +62,77 @@ public class Template {
      * 包含项目结构、文件模板等配置
      */
     private String templateConfig;
+
+    // Getters and Setters
+    public Long getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(Long templateId) {
+        this.templateId = templateId;
+    }
+
+    public String getTemplateName() {
+        return templateName;
+    }
+
+    public void setTemplateName(String templateName) {
+        this.templateName = templateName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getTemplateType() {
+        return templateType;
+    }
+
+    public void setTemplateType(String templateType) {
+        this.templateType = templateType;
+    }
+
+    public Boolean getIsSystem() {
+        return isSystem;
+    }
+
+    public void setIsSystem(Boolean isSystem) {
+        this.isSystem = isSystem;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public Long getCreateUserId() {
+        return createUserId;
+    }
+
+    public void setCreateUserId(Long createUserId) {
+        this.createUserId = createUserId;
+    }
+
+    public String getTemplateConfig() {
+        return templateConfig;
+    }
+
+    public void setTemplateConfig(String templateConfig) {
+        this.templateConfig = templateConfig;
+    }
 }

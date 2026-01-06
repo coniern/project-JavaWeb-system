@@ -3,11 +3,12 @@ package com.example.projectmanagement.controller;
 import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.EnvironmentConfig;
 import com.example.projectmanagement.service.EnvironmentConfigService;
+import com.example.projectmanagement.utils.LogUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
@@ -20,6 +21,9 @@ public class EnvironmentConfigController extends BaseController {
     
     @Autowired
     private EnvironmentConfigService environmentConfigService;
+    
+    @Autowired
+    private LogUtils logUtils;
     
     /**
      * 获取环境配置列表
@@ -72,8 +76,11 @@ public class EnvironmentConfigController extends BaseController {
         // 验证环境类型
         validateEnvType(config.getEnvType());
         
-        // 获取当前登录用户ID（这里假设从Security上下文中获取）
-        Long currentUserId = 1L; // 临时值，实际应该从上下文中获取
+        // 获取当前登录用户ID
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) {
+            return error("当前用户未登录");
+        }
         
         boolean result = environmentConfigService.createEnvironmentConfig(config, currentUserId);
         
@@ -99,8 +106,11 @@ public class EnvironmentConfigController extends BaseController {
         // 验证环境类型
         validateEnvType(config.getEnvType());
         
-        // 获取当前登录用户ID（这里假设从Security上下文中获取）
-        Long currentUserId = 1L; // 临时值，实际应该从上下文中获取
+        // 获取当前登录用户ID
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) {
+            return error("当前用户未登录");
+        }
         
         boolean result = environmentConfigService.updateEnvironmentConfig(config, currentUserId);
         
@@ -119,8 +129,11 @@ public class EnvironmentConfigController extends BaseController {
     public ApiResponse<Boolean> deleteEnvironmentConfig(
             @PathVariable Long id) {
         
-        // 获取当前登录用户ID（这里假设从Security上下文中获取）
-        Long currentUserId = 1L; // 临时值，实际应该从上下文中获取
+        // 获取当前登录用户ID
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) {
+            return error("当前用户未登录");
+        }
         
         boolean result = environmentConfigService.deleteEnvironmentConfig(id, currentUserId);
         
@@ -137,10 +150,28 @@ public class EnvironmentConfigController extends BaseController {
     @PostMapping("/{id}/toggle")
     @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
     public ApiResponse<Boolean> toggleEnvironmentConfig(@PathVariable Long id) {
-        
-        boolean result = environmentConfigService.toggleEnvironmentConfig(id);
-        
-        return success(result);
+        try {
+            // 获取当前用户ID
+            Long currentUserId = getCurrentUserId();
+            if (currentUserId == null) {
+                return error("当前用户未登录");
+            }
+            
+            // 获取当前环境配置
+            EnvironmentConfig config = environmentConfigService.getById(id);
+            if (config == null) {
+                return error("环境配置不存在");
+            }
+            
+            // 切换启用状态
+            boolean newEnabled = !config.getEnabled();
+            boolean result = environmentConfigService.toggleEnvironmentConfig(id, newEnabled, currentUserId);
+            
+            return success(result);
+        } catch (Exception e) {
+            logUtils.logException("环境配置管理", "切换状态", e);
+            return error("切换状态失败: " + e.getMessage());
+        }
     }
     
     /**

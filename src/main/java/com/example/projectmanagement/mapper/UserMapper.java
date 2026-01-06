@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.example.projectmanagement.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ public interface UserMapper extends BaseMapper<User> {
      * @param username 用户名
      * @return 用户信息
      */
+    @Select("SELECT * FROM sys_user WHERE username = #{username}")
     User findByUsername(@Param("username") String username);
 
     /**
@@ -26,6 +28,7 @@ public interface UserMapper extends BaseMapper<User> {
      * @param projectId 项目ID
      * @return 成员列表
      */
+    @Select("SELECT u.* FROM sys_user u JOIN project_member pm ON u.id = pm.user_id WHERE pm.project_id = #{projectId}")
     List<User> findByProjectId(@Param("projectId") Long projectId);
 
     /**
@@ -33,5 +36,6 @@ public interface UserMapper extends BaseMapper<User> {
      * @param userId 用户ID
      * @return 角色列表
      */
+    @Select("SELECT r.code FROM sys_role r JOIN sys_user_role ur ON r.id = ur.role_id WHERE ur.user_id = #{userId}")
     List<String> findRolesByUserId(@Param("userId") Long userId);
 }

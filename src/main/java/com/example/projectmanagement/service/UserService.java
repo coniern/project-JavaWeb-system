@@ -2,7 +2,6 @@ package com.example.projectmanagement.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.projectmanagement.entity.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
 
@@ -10,7 +9,7 @@ import java.util.List;
  * 用户服务接口
  * 提供用户相关的业务逻辑
  */
-public interface UserService extends IService<User>, UserDetailsService {
+public interface UserService extends IService<User> {
     
     /**
      * 根据用户名查询用户
