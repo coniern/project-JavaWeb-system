@@ -8,4 +8,7 @@ logs/
 *.class
 *.log
 *.tmp
+frontend/node_modules/
+frontend/dist/
+backend/target/
 .DS_Store
