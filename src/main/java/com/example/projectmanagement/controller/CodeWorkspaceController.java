@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,21 @@ public class CodeWorkspaceController extends BaseController {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("path", path);
         result.put("content", Files.readString(target, StandardCharsets.UTF_8));
+        result.put("size", Files.size(target));
+        return success(result);
+    }
+
+    @PostMapping("/save-file")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
+    public ApiResponse<Map<String, Object>> saveFile(@RequestBody FileSaveRequest request) throws IOException {
+        Path target = normalizeInsideProject(request.getPath());
+        validateEditableFile(target);
+        Files.writeString(target, request.getContent(), StandardCharsets.UTF_8);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("path", request.getPath());
+        result.put("savedAt", LocalDateTime.now().toString());
+        result.put("size", Files.size(target));
         return success(result);
     }
 
@@ -92,6 +108,19 @@ public class CodeWorkspaceController extends BaseController {
         return normalized;
     }
 
+    private void validateEditableFile(Path target) {
+        String fileName = target.getFileName().toString();
+        boolean editable = fileName.endsWith(".java")
+                || fileName.endsWith(".html")
+                || fileName.endsWith(".jsp")
+                || fileName.endsWith(".yml")
+                || fileName.endsWith(".sql")
+                || fileName.endsWith(".md");
+        if (!editable) {
+            throw new IllegalArgumentException("当前文件类型不支持在线保存");
+        }
+    }
+
     public static class CodeCompletionRequest {
         private String language;
         private String prompt;
@@ -119,6 +148,27 @@ public class CodeWorkspaceController extends BaseController {
 
         public void setCodeContext(String codeContext) {
             this.codeContext = codeContext;
+        }
+    }
+
+    public static class FileSaveRequest {
+        private String path;
+        private String content;
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public void setContent(String content) {
+            this.content = content;
         }
     }
 }

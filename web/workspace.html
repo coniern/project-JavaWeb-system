@@ -39,6 +39,9 @@
             .btn-outline {
                 @apply px-5 py-3 border border-primary text-primary rounded-xl font-medium hover:bg-primary/5 transition-all;
             }
+            .chip {
+                @apply px-3 py-2 rounded-full text-sm border border-line bg-white hover:border-primary hover:text-primary transition-all;
+            }
         }
     </style>
 </head>
@@ -81,13 +84,19 @@
                 <div class="px-5 py-4 border-b border-line flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                         <p class="text-sm text-slate-500">当前文件</p>
-                        <h2 id="currentFilePath" class="text-lg font-semibold">请选择左侧文件</h2>
+                        <div class="flex items-center gap-3 mt-1">
+                            <h2 id="currentFilePath" class="text-lg font-semibold">请选择左侧文件</h2>
+                            <span id="editorDirtyBadge" class="hidden text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">未保存</span>
+                            <span id="editorMeta" class="text-xs text-slate-500"></span>
+                        </div>
                     </div>
                     <div class="flex gap-3">
+                        <button id="reloadFileBtn" class="btn-outline">重新载入</button>
+                        <button id="saveFileBtn" class="btn-primary">保存文件</button>
                         <button id="copyCodeBtn" class="btn-outline">复制代码</button>
                     </div>
                 </div>
-                <pre id="codeViewer" class="bg-slate-950 text-slate-100 p-5 overflow-auto text-sm font-mono min-h-[420px] whitespace-pre-wrap">请选择左侧文件查看代码。</pre>
+                <textarea id="codeViewer" spellcheck="false" class="bg-slate-950 text-slate-100 p-5 overflow-auto text-sm font-mono min-h-[420px] w-full resize-y focus:outline-none">请选择左侧文件查看代码。</textarea>
             </div>
 
             <div class="panel p-5">
@@ -97,6 +106,12 @@
                         <p class="text-sm text-slate-500 mt-1">输入你的开发意图，AI 会基于当前文件上下文给出补全或改写结果。</p>
                     </div>
                     <div id="workspaceAiStatus" class="text-sm px-3 py-2 rounded-full bg-emerald-50 text-emerald-700">AI 状态检测中</div>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-3">
+                    <button class="chip" data-quick-prompt="为当前代码生成一个规范的 REST 接口实现">生成接口</button>
+                    <button class="chip" data-quick-prompt="根据当前业务上下文生成一段可执行 SQL">生成 SQL</button>
+                    <button class="chip" data-quick-prompt="优化当前页面结构与交互体验">优化页面</button>
+                    <button class="chip" data-quick-prompt="解释当前代码的核心逻辑和作用">解释代码</button>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-4 mt-5">
                     <div>
@@ -127,6 +142,7 @@
                         <p class="text-sm text-slate-500 mt-1">查看当前 JavaWeb 管理平台各页面的实际效果。</p>
                     </div>
                     <div class="flex gap-3">
+                        <button id="refreshPreviewBtn" class="btn-outline">刷新预览</button>
                         <button id="openPreviewBtn" class="btn-outline">新窗口打开</button>
                     </div>
                 </div>
@@ -139,6 +155,7 @@
         const API_BASE = '/project-management/api';
         let currentFile = '';
         let currentPreviewUrl = '/project-management/index.html';
+        let originalContent = '';
 
         function getToken() {
             return localStorage.getItem('token');
@@ -194,11 +211,14 @@
                 headers: authHeaders()
             });
             if (data.code !== 200) {
-                document.getElementById('codeViewer').textContent = '读取文件失败';
+                document.getElementById('codeViewer').value = '读取文件失败';
                 return;
             }
             document.getElementById('currentFilePath').textContent = data.data.path;
-            document.getElementById('codeViewer').textContent = data.data.content;
+            document.getElementById('codeViewer').value = data.data.content;
+            originalContent = data.data.content;
+            document.getElementById('editorMeta').textContent = `${Math.round((data.data.size || 0) / 1024)} KB`;
+            updateDirtyState();
             await loadFiles();
         }
 
@@ -229,7 +249,7 @@
         async function runAiCompletion() {
             const prompt = document.getElementById('completionPrompt').value.trim();
             const language = document.getElementById('languageSelect').value;
-            const codeContext = document.getElementById('codeViewer').textContent;
+            const codeContext = document.getElementById('codeViewer').value;
             if (!prompt) {
                 alert('请先填写补全要求');
                 return;
@@ -250,7 +270,41 @@
         function appendCompletionToViewer() {
             const result = document.getElementById('completionResult').value.trim();
             if (!result) return;
-            document.getElementById('codeViewer').textContent += `\n\n${result}`;
+            document.getElementById('codeViewer').value += `\n\n${result}`;
+            updateDirtyState();
+        }
+
+        function updateDirtyState() {
+            const dirty = currentFile && document.getElementById('codeViewer').value !== originalContent;
+            document.getElementById('editorDirtyBadge').classList.toggle('hidden', !dirty);
+        }
+
+        async function saveCurrentFile() {
+            if (!currentFile) {
+                alert('请先选择文件');
+                return;
+            }
+            const data = await requestJson(`${API_BASE}/workspace/save-file`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    path: currentFile,
+                    content: document.getElementById('codeViewer').value
+                })
+            });
+            if (data.code !== 200) {
+                alert(data.message || '保存失败');
+                return;
+            }
+            originalContent = document.getElementById('codeViewer').value;
+            document.getElementById('editorMeta').textContent = `${Math.round((data.data.size || 0) / 1024)} KB · ${data.data.savedAt}`;
+            updateDirtyState();
+            alert('文件已保存');
+        }
+
+        function refreshPreview() {
+            const iframe = document.getElementById('previewFrame');
+            iframe.src = `${currentPreviewUrl}${currentPreviewUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
         }
 
         document.getElementById('fileList').addEventListener('click', async (event) => {
@@ -270,11 +324,21 @@
         document.getElementById('scopeSelect').addEventListener('change', async () => {
             currentFile = '';
             document.getElementById('currentFilePath').textContent = '请选择左侧文件';
-            document.getElementById('codeViewer').textContent = '请选择左侧文件查看代码。';
+            document.getElementById('codeViewer').value = '请选择左侧文件查看代码。';
+            originalContent = document.getElementById('codeViewer').value;
+            document.getElementById('editorMeta').textContent = '';
+            updateDirtyState();
             await loadFiles();
         });
         document.getElementById('runCompletionBtn').addEventListener('click', runAiCompletion);
         document.getElementById('insertCompletionBtn').addEventListener('click', appendCompletionToViewer);
+        document.getElementById('saveFileBtn').addEventListener('click', saveCurrentFile);
+        document.getElementById('reloadFileBtn').addEventListener('click', async () => {
+            if (currentFile) {
+                await loadFileContent(currentFile);
+            }
+        });
+        document.getElementById('refreshPreviewBtn').addEventListener('click', refreshPreview);
         document.getElementById('openPreviewBtn').addEventListener('click', () => window.open(currentPreviewUrl, '_blank'));
         document.getElementById('refreshWorkspaceBtn').addEventListener('click', async () => {
             await Promise.all([loadFiles(), loadPreviews(), loadAiStatus()]);
@@ -283,8 +347,15 @@
             }
         });
         document.getElementById('copyCodeBtn').addEventListener('click', async () => {
-            await navigator.clipboard.writeText(document.getElementById('codeViewer').textContent);
+            await navigator.clipboard.writeText(document.getElementById('codeViewer').value);
             alert('代码已复制');
+        });
+        document.getElementById('codeViewer').addEventListener('input', updateDirtyState);
+        document.querySelectorAll('[data-quick-prompt]').forEach(button => {
+            button.addEventListener('click', async () => {
+                document.getElementById('completionPrompt').value = button.dataset.quickPrompt;
+                await runAiCompletion();
+            });
         });
 
         window.addEventListener('DOMContentLoaded', async () => {
