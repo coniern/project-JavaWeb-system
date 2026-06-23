@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -85,6 +86,9 @@ public class AuthController extends BaseController {
             
             // 查询用户信息
             User user = userService.findByUsername(loginRequest.getUsername());
+            if (user != null) {
+                user.setPassword(null);
+            }
             
             // 构建响应数据
             Map<String, Object> response = new HashMap<>();
@@ -144,7 +148,7 @@ public class AuthController extends BaseController {
     /**
      * 获取当前登录用户信息
      */
-    @PostMapping("/me")
+    @GetMapping("/me")
     public ApiResponse<User> getCurrentUser(Authentication authentication) {
         try {
             if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
@@ -153,6 +157,9 @@ public class AuthController extends BaseController {
             
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             User user = userService.findByUsername(userDetails.getUsername());
+            if (user != null) {
+                user.setPassword(null);
+            }
             
             logUtils.logDebug("用户获取个人信息: " + userDetails.getUsername());
             return success(user);

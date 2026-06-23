@@ -1,5 +1,9 @@
 package com.example.projectmanagement.controller;
 
+/*
+ * 项目成员模块保留为后续扩展，当前最小可运行版本不注册该控制器。
+ */
+
 import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.ProjectMember;
 import com.example.projectmanagement.service.ProjectMemberService;
@@ -14,8 +18,6 @@ import java.util.List;
  * 项目成员Controller
  * 处理项目成员相关的HTTP请求
  */
-@RestController
-@RequestMapping("/api/project-members")
 public class ProjectMemberController extends BaseController {
     
     @Autowired

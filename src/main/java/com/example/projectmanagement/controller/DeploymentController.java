@@ -1,5 +1,9 @@
 package com.example.projectmanagement.controller;
 
+/*
+ * 部署模块保留为后续扩展，当前最小可运行版本不注册该控制器。
+ */
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.Deployment;
@@ -19,8 +23,6 @@ import java.util.List;
  * 部署Controller
  * 处理部署相关的HTTP请求
  */
-@RestController
-@RequestMapping("/api/deployments")
 public class DeploymentController extends BaseController {
     
     @Autowired

@@ -1,5 +1,9 @@
 package com.example.projectmanagement.controller;
 
+/*
+ * 模板模块保留为后续扩展，当前最小可运行版本不注册该控制器。
+ */
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.Template;
@@ -15,8 +19,6 @@ import java.util.Map;
  * 项目模板控制器
  * 提供项目模板库相关的API接口
  */
-@RestController
-@RequestMapping("/api/templates")
 public class TemplateController extends BaseController {
 
     @Autowired

@@ -1,5 +1,10 @@
 package com.example.projectmanagement.controller;
 
+/*
+ * 早期 Mock 接口实现，当前数据库版后端已由独立控制器接管。
+ * 暂时保留源码，但不注册为 Spring Bean。
+ */
+
 import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.User;
 import org.springframework.web.bind.annotation.*;
@@ -13,8 +18,6 @@ import java.util.Map;
  * 简单的REST API控制器
  * 提供基本的认证和项目管理功能
  */
-@RestController
-@RequestMapping("/api")
 public class SimpleApiController extends BaseController {
 
     // 模拟用户数据

@@ -1,5 +1,9 @@
 package com.example.projectmanagement.service.impl;
 
+/*
+ * 环境配置服务保留为后续扩展，当前最小可运行版本不注册该 Service。
+ */
+
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.projectmanagement.entity.EnvironmentConfig;
 import com.example.projectmanagement.mapper.EnvironmentConfigMapper;
@@ -14,7 +18,6 @@ import java.util.List;
  * 环境配置服务实现类
  * 实现环境配置相关的业务逻辑
  */
-@Service
 public class EnvironmentConfigServiceImpl extends ServiceImpl<EnvironmentConfigMapper, EnvironmentConfig> implements EnvironmentConfigService {
     
     @Autowired

@@ -1,5 +1,9 @@
 package com.example.projectmanagement.service.impl;
 
+/*
+ * 模板服务保留为后续扩展，当前最小可运行版本不注册该 Service。
+ */
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.projectmanagement.entity.Template;
@@ -29,7 +33,6 @@ import java.util.Map;
  * 项目模板服务实现类
  * 实现项目模板的具体业务逻辑
  */
-@Service
 public class TemplateServiceImpl extends ServiceImpl<TemplateMapper, Template> implements TemplateService {
 
     private static final Logger log = LoggerFactory.getLogger(TemplateServiceImpl.class);

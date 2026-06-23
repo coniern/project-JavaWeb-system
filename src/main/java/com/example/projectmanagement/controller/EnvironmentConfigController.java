@@ -1,5 +1,9 @@
 package com.example.projectmanagement.controller;
 
+/*
+ * 环境配置模块保留为后续扩展，当前最小可运行版本不注册该控制器。
+ */
+
 import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.EnvironmentConfig;
 import com.example.projectmanagement.service.EnvironmentConfigService;
@@ -15,8 +19,6 @@ import java.util.List;
  * 环境配置Controller
  * 处理环境配置相关的HTTP请求
  */
-@RestController
-@RequestMapping("/api/environment-configs")
 public class EnvironmentConfigController extends BaseController {
     
     @Autowired

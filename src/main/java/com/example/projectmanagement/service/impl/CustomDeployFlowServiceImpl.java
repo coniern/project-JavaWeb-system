@@ -1,5 +1,9 @@
 package com.example.projectmanagement.service.impl;
 
+/*
+ * 自定义部署流程服务保留为后续扩展，当前最小可运行版本不注册该 Service。
+ */
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.projectmanagement.entity.CustomDeployFlow;
@@ -25,7 +29,6 @@ import java.util.concurrent.CountDownLatch;
  * 自定义部署流程服务实现类
  * 实现自定义部署流程相关的业务逻辑
  */
-@Service
 public class CustomDeployFlowServiceImpl extends ServiceImpl<CustomDeployFlowMapper, CustomDeployFlow> implements CustomDeployFlowService {
 
     @Autowired

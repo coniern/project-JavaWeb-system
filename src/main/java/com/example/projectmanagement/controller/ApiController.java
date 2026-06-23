@@ -1,5 +1,10 @@
 package com.example.projectmanagement.controller;
 
+/*
+ * 早期 Mock 接口实现，当前数据库版后端已由独立控制器接管。
+ * 暂时保留源码，但不注册为 Spring Bean。
+ */
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -11,8 +16,6 @@ import java.util.Map;
  * 完整的REST API控制器
  * 提供前端所需的所有API接口
  */
-@RestController
-@RequestMapping("/api")
 public class ApiController {
 
     // 模拟用户数据

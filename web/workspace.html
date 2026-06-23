@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码工作台 - 项目管理平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f766e',
+                        ink: '#0f172a',
+                        mist: '#f8fafc',
+                        line: '#e2e8f0'
+                    },
+                    fontFamily: {
+                        sans: ['IBM Plex Sans', 'sans-serif'],
+                        mono: ['IBM Plex Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .panel {
+                @apply bg-white rounded-2xl border border-line shadow-sm;
+            }
+            .input-field {
+                @apply w-full px-4 py-3 border border-slate-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/15 focus:outline-none transition-all;
+            }
+            .btn-primary {
+                @apply px-5 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-all;
+            }
+            .btn-outline {
+                @apply px-5 py-3 border border-primary text-primary rounded-xl font-medium hover:bg-primary/5 transition-all;
+            }
+        }
+    </style>
+</head>
+<body class="bg-mist text-ink min-h-screen font-sans">
+    <header class="bg-white border-b border-line sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <a href="index.html" class="text-sm text-primary hover:underline"><i class="fa fa-arrow-left mr-2"></i>返回首页</a>
+                <h1 class="text-2xl font-bold mt-2">JavaWeb 代码工作台</h1>
+                <p class="text-slate-500 mt-1">浏览项目代码、切换页面预览、调用 AI 做 Java/HTML 代码补全。</p>
+            </div>
+            <div class="flex gap-3">
+                <button id="refreshWorkspaceBtn" class="btn-outline"><i class="fa fa-refresh mr-2"></i>刷新</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-6">
+        <aside class="panel p-5 space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">代码范围</label>
+                <select id="scopeSelect" class="input-field">
+                    <option value="src">后端 Java 代码</option>
+                    <option value="web">前端页面模板</option>
+                    <option value="resources">资源与配置</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">文件列表</label>
+                <div id="fileList" class="border border-line rounded-xl overflow-hidden max-h-[520px] overflow-y-auto bg-slate-50"></div>
+            </div>
+            <div class="border-t border-line pt-5">
+                <h2 class="font-semibold text-slate-900">页面预览</h2>
+                <div id="previewList" class="mt-3 space-y-2"></div>
+            </div>
+        </aside>
+
+        <section class="space-y-6">
+            <div class="panel overflow-hidden">
+                <div class="px-5 py-4 border-b border-line flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <p class="text-sm text-slate-500">当前文件</p>
+                        <h2 id="currentFilePath" class="text-lg font-semibold">请选择左侧文件</h2>
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="copyCodeBtn" class="btn-outline">复制代码</button>
+                    </div>
+                </div>
+                <pre id="codeViewer" class="bg-slate-950 text-slate-100 p-5 overflow-auto text-sm font-mono min-h-[420px] whitespace-pre-wrap">请选择左侧文件查看代码。</pre>
+            </div>
+
+            <div class="panel p-5">
+                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold">AI 代码补全</h2>
+                        <p class="text-sm text-slate-500 mt-1">输入你的开发意图，AI 会基于当前文件上下文给出补全或改写结果。</p>
+                    </div>
+                    <div id="workspaceAiStatus" class="text-sm px-3 py-2 rounded-full bg-emerald-50 text-emerald-700">AI 状态检测中</div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-4 mt-5">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">语言</label>
+                        <select id="languageSelect" class="input-field">
+                            <option value="Java">Java</option>
+                            <option value="HTML">HTML</option>
+                            <option value="JavaScript">JavaScript</option>
+                            <option value="SQL">SQL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">补全要求</label>
+                        <input id="completionPrompt" class="input-field" placeholder="例如：为当前控制器补一个查询接口，并加上参数校验">
+                    </div>
+                </div>
+                <div class="mt-4 flex gap-3">
+                    <button id="runCompletionBtn" class="btn-primary"><i class="fa fa-magic mr-2"></i>生成补全</button>
+                    <button id="insertCompletionBtn" class="btn-outline">追加到编辑区</button>
+                </div>
+                <textarea id="completionResult" class="input-field mt-4 min-h-[220px] font-mono text-sm" placeholder="AI 生成的代码会显示在这里"></textarea>
+            </div>
+
+            <div class="panel overflow-hidden">
+                <div class="px-5 py-4 border-b border-line flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold">页面实时预览</h2>
+                        <p class="text-sm text-slate-500 mt-1">查看当前 JavaWeb 管理平台各页面的实际效果。</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="openPreviewBtn" class="btn-outline">新窗口打开</button>
+                    </div>
+                </div>
+                <iframe id="previewFrame" class="w-full h-[520px] bg-white" src="/project-management/index.html"></iframe>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const API_BASE = '/project-management/api';
+        let currentFile = '';
+        let currentPreviewUrl = '/project-management/index.html';
+
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        function authHeaders(extra = {}) {
+            const token = getToken();
+            return {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                ...extra
+            };
+        }
+
+        function ensureAuthenticated() {
+            if (!getToken()) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        async function requestJson(url, options = {}) {
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+                throw new Error('登录已失效');
+            }
+            return response.json();
+        }
+
+        async function loadFiles() {
+            const scope = document.getElementById('scopeSelect').value;
+            const data = await requestJson(`${API_BASE}/workspace/files?scope=${encodeURIComponent(scope)}`, {
+                headers: authHeaders()
+            });
+            const container = document.getElementById('fileList');
+            if (data.code !== 200) {
+                container.innerHTML = '<div class="p-4 text-sm text-red-500">获取文件列表失败</div>';
+                return;
+            }
+            container.innerHTML = data.data.map(path => `
+                <button class="w-full text-left px-4 py-3 text-sm border-b border-line hover:bg-white transition-colors ${path === currentFile ? 'bg-white text-primary font-medium' : 'text-slate-600'}" data-path="${path}">
+                    ${path}
+                </button>
+            `).join('');
+        }
+
+        async function loadFileContent(path) {
+            currentFile = path;
+            const data = await requestJson(`${API_BASE}/workspace/file-content?path=${encodeURIComponent(path)}`, {
+                headers: authHeaders()
+            });
+            if (data.code !== 200) {
+                document.getElementById('codeViewer').textContent = '读取文件失败';
+                return;
+            }
+            document.getElementById('currentFilePath').textContent = data.data.path;
+            document.getElementById('codeViewer').textContent = data.data.content;
+            await loadFiles();
+        }
+
+        async function loadPreviews() {
+            const data = await requestJson(`${API_BASE}/workspace/previews`, {
+                headers: authHeaders()
+            });
+            if (data.code !== 200) return;
+            document.getElementById('previewList').innerHTML = data.data.map(item => `
+                <button class="w-full text-left px-4 py-3 rounded-xl border border-line hover:border-primary hover:bg-primary/5 transition-all ${item.url === currentPreviewUrl ? 'bg-primary/10 border-primary text-primary' : 'bg-white text-slate-700'}" data-preview-url="${item.url}">
+                    ${item.name}
+                </button>
+            `).join('');
+        }
+
+        async function loadAiStatus() {
+            const data = await requestJson(`${API_BASE}/ai/status`, {
+                headers: authHeaders()
+            });
+            if (data.code !== 200) return;
+            const el = document.getElementById('workspaceAiStatus');
+            el.textContent = data.data.connected ? `AI 已连接 · ${data.data.model}` : `AI 回退模式 · ${data.data.model}`;
+            el.className = data.data.connected
+                ? 'text-sm px-3 py-2 rounded-full bg-emerald-50 text-emerald-700'
+                : 'text-sm px-3 py-2 rounded-full bg-amber-50 text-amber-700';
+        }
+
+        async function runAiCompletion() {
+            const prompt = document.getElementById('completionPrompt').value.trim();
+            const language = document.getElementById('languageSelect').value;
+            const codeContext = document.getElementById('codeViewer').textContent;
+            if (!prompt) {
+                alert('请先填写补全要求');
+                return;
+            }
+            document.getElementById('completionResult').value = 'AI 正在生成，请稍候...';
+            const data = await requestJson(`${API_BASE}/workspace/ai-complete`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ language, prompt, codeContext })
+            });
+            if (data.code !== 200) {
+                document.getElementById('completionResult').value = data.message || '生成失败';
+                return;
+            }
+            document.getElementById('completionResult').value = data.data.completion;
+        }
+
+        function appendCompletionToViewer() {
+            const result = document.getElementById('completionResult').value.trim();
+            if (!result) return;
+            document.getElementById('codeViewer').textContent += `\n\n${result}`;
+        }
+
+        document.getElementById('fileList').addEventListener('click', async (event) => {
+            const button = event.target.closest('button[data-path]');
+            if (!button) return;
+            await loadFileContent(button.dataset.path);
+        });
+
+        document.getElementById('previewList').addEventListener('click', (event) => {
+            const button = event.target.closest('button[data-preview-url]');
+            if (!button) return;
+            currentPreviewUrl = button.dataset.previewUrl;
+            document.getElementById('previewFrame').src = currentPreviewUrl;
+            loadPreviews();
+        });
+
+        document.getElementById('scopeSelect').addEventListener('change', async () => {
+            currentFile = '';
+            document.getElementById('currentFilePath').textContent = '请选择左侧文件';
+            document.getElementById('codeViewer').textContent = '请选择左侧文件查看代码。';
+            await loadFiles();
+        });
+        document.getElementById('runCompletionBtn').addEventListener('click', runAiCompletion);
+        document.getElementById('insertCompletionBtn').addEventListener('click', appendCompletionToViewer);
+        document.getElementById('openPreviewBtn').addEventListener('click', () => window.open(currentPreviewUrl, '_blank'));
+        document.getElementById('refreshWorkspaceBtn').addEventListener('click', async () => {
+            await Promise.all([loadFiles(), loadPreviews(), loadAiStatus()]);
+            if (currentFile) {
+                await loadFileContent(currentFile);
+            }
+        });
+        document.getElementById('copyCodeBtn').addEventListener('click', async () => {
+            await navigator.clipboard.writeText(document.getElementById('codeViewer').textContent);
+            alert('代码已复制');
+        });
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!ensureAuthenticated()) return;
+            await Promise.all([loadFiles(), loadPreviews(), loadAiStatus()]);
+        });
+    </script>
+</body>
+</html>

@@ -3,8 +3,6 @@ package com.example.projectmanagement.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.io.Serializable;
@@ -14,8 +12,6 @@ import java.time.LocalDateTime;
  * 角色实体类
  * 实现GrantedAuthority接口以支持Spring Security权限控制
  */
-@Data
-@EqualsAndHashCode(callSuper = false)
 @TableName("sys_role")
 public class Role implements Serializable, GrantedAuthority {
     private static final long serialVersionUID = 1L;
@@ -37,6 +33,54 @@ public class Role implements Serializable, GrantedAuthority {
 
     // 更新时间
     private LocalDateTime updateTime;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
 
     // Spring Security相关方法
     @Override

@@ -2,7 +2,10 @@ package com.example.projectmanagement.controller;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.projectmanagement.entity.User;
 
 /**
  * 基础Controller类
@@ -18,10 +21,12 @@ public class BaseController {
     protected Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
-            try {
-                return Long.parseLong(authentication.getName());
-            } catch (NumberFormatException e) {
-                return null;
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof User user) {
+                return user.getId();
+            }
+            if (principal instanceof UserDetails userDetails && userDetails instanceof User userDetailsUser) {
+                return userDetailsUser.getId();
             }
         }
         return null;

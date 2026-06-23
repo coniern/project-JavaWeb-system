@@ -4,10 +4,12 @@
 out/
 target/
 logs/
+data/
 *.iml
 *.class
 *.log
 *.tmp
+*.gz
 frontend/node_modules/
 frontend/dist/
 backend/target/

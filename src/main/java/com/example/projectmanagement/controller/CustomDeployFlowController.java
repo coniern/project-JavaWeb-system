@@ -1,5 +1,9 @@
 package com.example.projectmanagement.controller;
 
+/*
+ * 自定义部署流程模块保留为后续扩展，当前最小可运行版本不注册该控制器。
+ */
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.projectmanagement.entity.CustomDeployFlow;
 import com.example.projectmanagement.entity.FlowExecution;
@@ -14,8 +18,6 @@ import java.util.Map;
  * 自定义部署流程控制器
  * 提供自定义部署流程编排相关的API接口
  */
-@RestController
-@RequestMapping("/api/custom-deploy-flow")
 public class CustomDeployFlowController {
 
     @Autowired

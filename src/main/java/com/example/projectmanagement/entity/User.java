@@ -3,7 +3,6 @@ package com.example.projectmanagement.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -139,8 +138,7 @@ public class User implements Serializable, UserDetails {
     // Spring Security相关方法
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // 将用户角色转换为Spring Security的权限
-        return roles;
+        return roles == null ? List.of() : roles;
     }
 
     @Override

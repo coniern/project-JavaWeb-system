@@ -6,6 +6,8 @@ import com.example.projectmanagement.entity.Project;
 import com.example.projectmanagement.mapper.ProjectMapper;
 import com.example.projectmanagement.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,7 +26,12 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Override
     public Page<Project> findPage(Integer pageNum, Integer pageSize, String status, String keyword) {
         Page<Project> page = new Page<>(pageNum, pageSize);
-        return projectMapper.findPage(page, status, keyword);
+        return lambdaQuery()
+                .eq(status != null && !status.isBlank(), Project::getStatus, status)
+                .and(keyword != null && !keyword.isBlank(), wrapper ->
+                        wrapper.like(Project::getName, keyword).or().like(Project::getDescription, keyword))
+                .orderByDesc(Project::getUpdateTime)
+                .page(page);
     }
     
     @Override
@@ -37,7 +44,12 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         
         project.setCreateTime(LocalDateTime.now());
         project.setUpdateTime(LocalDateTime.now());
-        project.setProgress(0); // 初始进度为0
+        if (project.getProgress() == null) {
+            project.setProgress(0);
+        }
+        if (project.getStatus() == null || project.getStatus().isBlank()) {
+            project.setStatus("planning");
+        }
         
         return save(project);
     }
@@ -52,7 +64,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         
         // 只有负责人和系统管理员才能更新项目
         // 这里可以根据实际的权限系统进行调整
-        boolean hasPermission = existingProject.getLeaderId().equals(currentUserId);
+        boolean hasPermission = hasAdminRole() || existingProject.getLeaderId().equals(currentUserId);
         if (!hasPermission) {
             return false;
         }
@@ -74,12 +86,12 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     
     @Override
     public List<Project> findByLeaderId(Long leaderId) {
-        return projectMapper.findByLeaderId(leaderId);
+        return lambdaQuery().eq(Project::getLeaderId, leaderId).list();
     }
     
     @Override
     public List<Project> findByTechStack(String techStack) {
-        return projectMapper.findByTechStack(techStack);
+        return lambdaQuery().eq(Project::getTechStack, techStack).list();
     }
     
     @Override
@@ -91,7 +103,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         }
         
         // 只有负责人和系统管理员才能删除项目
-        boolean hasPermission = project.getLeaderId().equals(currentUserId);
+        boolean hasPermission = hasAdminRole() || project.getLeaderId().equals(currentUserId);
         if (!hasPermission) {
             return false;
         }
@@ -112,5 +124,14 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setUpdateTime(LocalDateTime.now());
         
         return updateById(project);
+    }
+
+    private boolean hasAdminRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 }

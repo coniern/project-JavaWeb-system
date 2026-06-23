@@ -1,6 +1,7 @@
 package com.example.projectmanagement.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.projectmanagement.entity.Role;
 import com.example.projectmanagement.entity.User;
 import com.example.projectmanagement.mapper.UserMapper;
 import com.example.projectmanagement.service.UserService;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -71,9 +73,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new UsernameNotFoundException("用户名不存在");
         }
         
-        // 加载用户角色
         List<String> roleCodes = findRolesByUserId(user.getId());
-        // 这里可以根据需要设置用户的权限信息
+        List<Role> roles = new ArrayList<>();
+        for (String roleCode : roleCodes) {
+            Role role = new Role();
+            role.setCode("ROLE_" + roleCode);
+            role.setName(roleCode);
+            roles.add(role);
+        }
+        user.setRoles(roles);
         
         return user;
     }

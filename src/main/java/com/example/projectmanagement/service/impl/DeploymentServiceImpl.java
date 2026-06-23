@@ -1,5 +1,9 @@
 package com.example.projectmanagement.service.impl;
 
+/*
+ * 部署服务保留为后续扩展，当前最小可运行版本不注册该 Service。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -32,7 +36,6 @@ import java.util.UUID;
  * 部署服务实现类
  * 实现部署相关的业务逻辑
  */
-@Service
 public class DeploymentServiceImpl extends ServiceImpl<DeploymentMapper, Deployment> implements DeploymentService {
     
     private static final Logger log = LoggerFactory.getLogger(DeploymentServiceImpl.class);

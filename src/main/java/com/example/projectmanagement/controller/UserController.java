@@ -91,7 +91,7 @@ public class UserController extends BaseController {
      * 仅管理员可以访问
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<User>> getUserList() {
         try {
             String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -111,7 +111,7 @@ public class UserController extends BaseController {
      * 仅管理员或用户本人可以访问
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN') or #id == principal.id")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ApiResponse<User> getUserById(@PathVariable Long id) {
         try {
             String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -136,7 +136,7 @@ public class UserController extends BaseController {
      * 仅管理员或用户本人可以访问
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN') or #id == principal.id")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ApiResponse<Boolean> updateUser(@PathVariable Long id, @Valid @RequestBody User user) {
         try {
             String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -179,13 +179,43 @@ public class UserController extends BaseController {
             return error("更新用户信息失败");
         }
     }
+
+    /**
+     * 更新个人资料
+     */
+    @PutMapping("/{id}/profile")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
+    public ApiResponse<Boolean> updateProfile(@PathVariable Long id, @RequestBody UpdateProfileRequest requestBody) {
+        try {
+            User existingUser = userService.getById(id);
+            if (existingUser == null) {
+                return error("用户不存在");
+            }
+
+            User user = new User();
+            user.setId(id);
+            user.setNickname(requestBody.getNickname());
+            user.setEmail(requestBody.getEmail());
+            user.setPhone(requestBody.getPhone());
+            user.setUpdateTime(LocalDateTime.now());
+
+            boolean result = userService.updateUser(user);
+            if (!result) {
+                return error("更新个人资料失败");
+            }
+            return success(true);
+        } catch (Exception e) {
+            logUtils.logException("用户管理", "更新个人资料", e);
+            return error("更新个人资料失败");
+        }
+    }
     
     /**
      * 修改用户状态（启用/禁用）
      * 仅管理员可以访问
      */
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Boolean> updateUserStatus(@PathVariable Long id, @RequestParam Integer status) {
         try {
             String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -231,7 +261,7 @@ public class UserController extends BaseController {
      * 仅管理员可以访问
      */
     @PutMapping("/{id}/reset-password")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Boolean> resetUserPassword(@PathVariable Long id, @RequestParam String newPassword) {
         try {
             String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -311,6 +341,36 @@ public class UserController extends BaseController {
         } catch (Exception e) {
             logUtils.logException("用户管理", "修改个人密码", e);
             return error("修改密码失败");
+        }
+    }
+
+    static class UpdateProfileRequest {
+        private String nickname;
+        private String email;
+        private String phone;
+
+        public String getNickname() {
+            return nickname;
+        }
+
+        public void setNickname(String nickname) {
+            this.nickname = nickname;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public void setPhone(String phone) {
+            this.phone = phone;
         }
     }
 }

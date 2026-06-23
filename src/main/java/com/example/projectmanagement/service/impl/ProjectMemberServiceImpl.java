@@ -1,5 +1,9 @@
 package com.example.projectmanagement.service.impl;
 
+/*
+ * 项目成员服务保留为后续扩展，当前最小可运行版本不注册该 Service。
+ */
+
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.projectmanagement.entity.ProjectMember;
 import com.example.projectmanagement.mapper.ProjectMemberMapper;
@@ -14,7 +18,6 @@ import java.util.List;
  * 项目成员服务实现类
  * 实现项目成员相关的业务逻辑
  */
-@Service
 public class ProjectMemberServiceImpl extends ServiceImpl<ProjectMemberMapper, ProjectMember> implements ProjectMemberService {
     
     @Autowired

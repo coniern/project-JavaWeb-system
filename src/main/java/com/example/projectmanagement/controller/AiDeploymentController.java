@@ -1,5 +1,9 @@
 package com.example.projectmanagement.controller;
 
+/*
+ * AI 部署分析模块保留为后续扩展，当前最小可运行版本不注册该控制器。
+ */
+
 import com.example.projectmanagement.entity.Deployment;
 import com.example.projectmanagement.service.DeploymentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +15,6 @@ import java.util.Map;
  * AI辅助部署控制器
  * 提供AI辅助部署失败排查相关的API接口
  */
-@RestController
-@RequestMapping("/api/ai-deployment")
 public class AiDeploymentController {
 
     @Autowired

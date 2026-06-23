@@ -209,28 +209,30 @@
             </div>
 
             <nav class="hidden md:flex items-center space-x-8">
-                <a href="#" class="nav-link active">首页</a>
-                <a href="#" class="nav-link">项目管理</a>
-                <a href="#" class="nav-link">模板库</a>
-                <a href="#" class="nav-link">部署管理</a>
-                <a href="#" class="nav-link">文档</a>
+                <a href="index.html" class="nav-link active">首页</a>
+                <a href="projects.html" class="nav-link">项目管理</a>
+                <a href="workspace.html" class="nav-link">代码工作台</a>
+                <a href="#templates" class="nav-link">模板库</a>
+                <a href="#deployments" class="nav-link">部署管理</a>
+                <a href="/project-management/swagger-ui/index.html" class="nav-link">文档</a>
             </nav>
 
             <div class="flex items-center space-x-4">
                 <div class="hidden md:flex items-center space-x-4">
-                    <a href="#" class="text-gray-600 hover:text-primary transition-colors duration-300 relative">
+                    <button id="notificationToggleBtn" class="text-gray-600 hover:text-primary transition-colors duration-300 relative">
                         <i class="fa fa-bell text-xl"></i>
                         <span class="absolute -top-1 -right-1 w-2 h-2 bg-danger rounded-full"></span>
-                    </a>
-                    <a href="#" class="text-gray-600 hover:text-primary transition-colors duration-300">
+                    </button>
+                    <button id="settingsToggleBtn" class="text-gray-600 hover:text-primary transition-colors duration-300">
                         <i class="fa fa-cog text-xl"></i>
-                    </a>
+                    </button>
                     <div class="flex items-center space-x-3 group">
                         <div class="w-9 h-9 bg-gradient-primary rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
                             <i class="fa fa-user text-white"></i>
                         </div>
-                        <span class="text-gray-700 font-medium group-hover:text-primary transition-colors duration-300">管理员</span>
+                        <span id="headerUsername" class="text-gray-700 font-medium group-hover:text-primary transition-colors duration-300">管理员</span>
                     </div>
+                    <button id="logoutBtn" class="text-sm text-gray-500 hover:text-primary transition-colors duration-300">退出</button>
                 </div>
                 <button class="md:hidden text-gray-600 hover:text-primary transition-colors duration-300" id="mobileMenuBtn">
                     <i class="fa fa-bars text-xl"></i>
@@ -241,17 +243,19 @@
         <!-- 移动端菜单 -->
         <div class="md:hidden bg-white shadow-md hidden" id="mobileMenu">
             <div class="container mx-auto px-4 py-4 flex flex-col space-y-4">
-                <a href="#" class="nav-link active py-2">首页</a>
-                <a href="#" class="nav-link py-2">项目管理</a>
-                <a href="#" class="nav-link py-2">模板库</a>
-                <a href="#" class="nav-link py-2">部署管理</a>
-                <a href="#" class="nav-link py-2">文档</a>
+                <a href="index.html" class="nav-link active py-2">首页</a>
+                <a href="projects.html" class="nav-link py-2">项目管理</a>
+                <a href="workspace.html" class="nav-link py-2">代码工作台</a>
+                <a href="#templates" class="nav-link py-2">模板库</a>
+                <a href="#deployments" class="nav-link py-2">部署管理</a>
+                <a href="/project-management/swagger-ui/index.html" class="nav-link py-2">文档</a>
                 <div class="flex items-center space-x-3 py-2">
                     <div class="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
                         <i class="fa fa-user text-white"></i>
                     </div>
-                    <span class="text-gray-700 font-medium">管理员</span>
+                    <span id="mobileUsername" class="text-gray-700 font-medium">管理员</span>
                 </div>
+                <button id="mobileLogoutBtn" class="text-left text-sm text-gray-500 hover:text-primary py-2">退出登录</button>
             </div>
         </div>
     </header>
@@ -259,7 +263,7 @@
     <!-- 主要内容区 -->
     <main class="flex-grow">
         <!-- 英雄区域 -->
-        <section class="bg-gradient-secondary py-16 md:py-24 relative overflow-hidden">
+        <section id="hero" class="bg-gradient-secondary py-16 md:py-24 relative overflow-hidden">
             <!-- 背景装饰 -->
             <div class="absolute top-0 right-0 w-1/2 h-full opacity-10">
                 <div class="absolute top-10 right-10 w-64 h-64 bg-primary rounded-full blur-3xl"></div>
@@ -275,10 +279,10 @@
                         简化项目管理流程，提高团队协作效率，实现快速部署和交付
                     </p>
                     <div class="flex flex-col sm:flex-row justify-center gap-4 animate-slide-up" style="animation-delay: 0.4s">
-                        <a href="#" class="btn-primary">
+                        <a href="projects.html" class="btn-primary">
                             开始使用 <i class="fa fa-arrow-right ml-2"></i>
                         </a>
-                        <a href="#" class="btn-secondary">
+                        <a href="/project-management/swagger-ui/index.html" class="btn-secondary">
                             查看文档 <i class="fa fa-book ml-2"></i>
                         </a>
                     </div>
@@ -298,7 +302,7 @@
         </section>
 
         <!-- 功能卡片区域 -->
-        <section class="py-16 bg-white">
+        <section id="features" class="py-16 bg-white">
             <div class="container mx-auto px-4">
                 <div class="text-center mb-16 animate-slide-up">
                     <h3 class="text-2xl md:text-3xl font-bold mb-4">核心功能</h3>
@@ -313,31 +317,42 @@
                         </div>
                         <h4 class="text-xl font-semibold mb-3">项目管理</h4>
                         <p class="text-gray-600 mb-6">创建和管理项目，分配任务，跟踪进度，确保项目按时交付</p>
-                        <a href="#" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300">
+                        <a href="projects.html" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300">
                             了解更多 <i class="fa fa-arrow-right ml-2"></i>
                         </a>
                     </div>
 
+                    <div class="feature-card animate-slide-up" style="animation-delay: 0.25s">
+                        <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                            <i class="fa fa-code text-primary text-2xl"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold mb-3">代码工作台</h4>
+                        <p class="text-gray-600 mb-6">浏览 JavaWeb 项目代码、实时预览页面，并通过本地免费大模型做代码补全与建议。</p>
+                        <a href="workspace.html" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300">
+                            打开工作台 <i class="fa fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+
                     <!-- 功能卡片2 -->
-                    <div class="feature-card animate-slide-up" style="animation-delay: 0.3s">
+                    <div id="templates" class="feature-card animate-slide-up" style="animation-delay: 0.3s">
                         <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                             <i class="fa fa-cubes text-primary text-2xl"></i>
                         </div>
                         <h4 class="text-xl font-semibold mb-3">模板库</h4>
                         <p class="text-gray-600 mb-6">从预设模板快速创建项目，支持自定义模板，提高开发效率</p>
-                        <a href="#" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300">
+                        <a href="/project-management/swagger-ui/index.html" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300">
                             了解更多 <i class="fa fa-arrow-right ml-2"></i>
                         </a>
                     </div>
 
                     <!-- 功能卡片3 -->
-                    <div class="feature-card animate-slide-up" style="animation-delay: 0.4s">
+                    <div id="deployments" class="feature-card animate-slide-up" style="animation-delay: 0.4s">
                         <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                             <i class="fa fa-rocket text-primary text-2xl"></i>
                         </div>
                         <h4 class="text-xl font-semibold mb-3">一键部署</h4>
                         <p class="text-gray-600 mb-6">支持多环境部署，一键发布项目，简化部署流程，减少人为错误</p>
-                        <a href="#" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300">
+                        <a href="#deployment-stats" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors duration-300">
                             了解更多 <i class="fa fa-arrow-right ml-2"></i>
                         </a>
                     </div>
@@ -346,7 +361,7 @@
         </section>
 
         <!-- 项目统计区域 -->
-        <section class="py-16 bg-gradient-light">
+        <section id="dashboard-stats" class="py-16 bg-gradient-light">
             <div class="container mx-auto px-4">
                 <div class="text-center mb-16 animate-slide-up">
                     <h3 class="text-2xl md:text-3xl font-bold mb-4">平台统计</h3>
@@ -356,25 +371,25 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
                     <!-- 统计卡片1 -->
                     <div class="stat-card animate-slide-up" style="animation-delay: 0.2s">
-                        <div class="text-4xl font-bold text-gradient mb-2">1,200+</div>
-                        <p class="text-gray-600">活跃项目</p>
+                        <div id="statTotalProjects" class="text-4xl font-bold text-gradient mb-2">0</div>
+                        <p class="text-gray-600">项目总数</p>
                     </div>
 
                     <!-- 统计卡片2 -->
                     <div class="stat-card animate-slide-up" style="animation-delay: 0.3s">
-                        <div class="text-4xl font-bold text-gradient mb-2">500+</div>
+                        <div id="statRegisteredUsers" class="text-4xl font-bold text-gradient mb-2">0</div>
                         <p class="text-gray-600">注册用户</p>
                     </div>
 
                     <!-- 统计卡片3 -->
                     <div class="stat-card animate-slide-up" style="animation-delay: 0.4s">
-                        <div class="text-4xl font-bold text-gradient mb-2">85%</div>
+                        <div id="statOnTimeRate" class="text-4xl font-bold text-gradient mb-2">0%</div>
                         <p class="text-gray-600">项目按时交付率</p>
                     </div>
 
                     <!-- 统计卡片4 -->
                     <div class="stat-card animate-slide-up" style="animation-delay: 0.5s">
-                        <div class="text-4xl font-bold text-gradient mb-2">98%</div>
+                        <div id="statSatisfactionRate" class="text-4xl font-bold text-gradient mb-2">0%</div>
                         <p class="text-gray-600">用户满意度</p>
                     </div>
                 </div>
@@ -382,16 +397,16 @@
         </section>
 
         <!-- 最近项目区域 -->
-        <section class="py-16 bg-white">
+        <section id="projects-section" class="py-16 bg-white">
             <div class="container mx-auto px-4">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 animate-slide-up">
                     <h3 class="text-2xl font-bold mb-4 md:mb-0">最近项目</h3>
                     <div class="flex flex-col sm:flex-row gap-4">
                         <div class="relative">
-                            <input type="text" placeholder="搜索项目..." class="input-field pl-10">
+                            <input id="homeSearchInput" type="text" placeholder="搜索项目..." class="input-field pl-10">
                             <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         </div>
-                        <a href="#" class="btn-outline">
+                        <a href="projects.html" class="btn-outline">
                             查看全部 <i class="fa fa-arrow-right ml-1"></i>
                         </a>
                     </div>
@@ -417,12 +432,12 @@
         </section>
 
         <!-- 部署统计区域 -->
-        <section class="py-16 bg-gradient-light">
+        <section id="deployment-stats" class="py-16 bg-gradient-light">
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center mb-8 animate-slide-up">
                     <h3 class="text-2xl font-bold">部署统计</h3>
-                    <a href="#" class="btn-outline">
-                        查看详情 <i class="fa fa-arrow-right ml-1"></i>
+                    <a href="/project-management/swagger-ui/index.html" class="btn-outline">
+                        查看接口 <i class="fa fa-arrow-right ml-1"></i>
                     </a>
                 </div>
 
@@ -458,8 +473,41 @@
             </div>
         </section>
 
+        <section id="ai-insight" class="py-16 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-8">
+                    <div class="bg-slate-950 text-white rounded-3xl p-8 shadow-2xl">
+                        <div class="flex items-center justify-between gap-4 mb-6">
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.3em] text-cyan-300">AI Insight</p>
+                                <h3 class="text-2xl font-bold mt-2">AI 项目驾驶舱</h3>
+                            </div>
+                            <button id="refreshAiInsightBtn" class="px-4 py-2 rounded-full border border-white/20 text-sm hover:bg-white/10 transition-all">
+                                <i class="fa fa-refresh mr-2"></i>刷新洞察
+                            </button>
+                        </div>
+                        <div id="dashboardAiInsight" class="text-white/85 leading-8 text-lg min-h-[120px]">
+                            正在生成项目洞察...
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-3xl p-8 border border-cyan-100 shadow-sm">
+                        <p class="text-sm font-semibold text-cyan-700">模型连接状态</p>
+                        <h4 class="text-2xl font-bold text-slate-900 mt-3" id="aiProviderName">Ollama</h4>
+                        <div class="mt-4 space-y-3 text-sm text-slate-600">
+                            <div>模型：<span id="aiModelName" class="font-medium text-slate-900">加载中</span></div>
+                            <div>连接：<span id="aiConnectionStatus" class="font-medium text-amber-600">检测中</span></div>
+                            <div>回退：<span id="aiFallbackStatus" class="font-medium text-slate-900">-</span></div>
+                        </div>
+                        <p class="mt-6 text-sm text-slate-500">
+                            默认支持免费的本地 Ollama 模型，也兼容 OpenAI 风格接口，便于后续接入开源或低成本模型服务。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- 行动召唤区域 -->
-        <section class="py-16 bg-gradient-primary text-white">
+        <section id="cta" class="py-16 bg-gradient-primary text-white">
             <div class="container mx-auto px-4">
                 <div class="max-w-4xl mx-auto text-center animate-slide-up">
                     <h3 class="text-2xl md:text-3xl font-bold mb-6">准备好开始使用了吗？</h3>
@@ -467,11 +515,11 @@
                         加入我们的平台，体验智能项目管理和快速部署的优势
                     </p>
                     <div class="flex flex-col sm:flex-row justify-center gap-4">
-                        <a href="#" class="bg-white text-primary font-medium px-8 py-4 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                        <a href="register.html" class="bg-white text-primary font-medium px-8 py-4 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
                             立即注册 <i class="fa fa-user-plus ml-2"></i>
                         </a>
-                        <a href="#" class="bg-transparent border border-white text-white font-medium px-8 py-4 rounded-lg hover:bg-white/10 transition-all duration-300">
-                            预约演示 <i class="fa fa-calendar ml-2"></i>
+                        <a href="projects.html" class="bg-transparent border border-white text-white font-medium px-8 py-4 rounded-lg hover:bg-white/10 transition-all duration-300">
+                            查看项目 <i class="fa fa-calendar ml-2"></i>
                         </a>
                     </div>
                 </div>
@@ -493,16 +541,16 @@
                     </div>
                     <p class="text-gray-400 mb-4">简化项目管理流程，提高团队协作效率，实现快速部署和交付</p>
                     <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform">
+                        <a href="https://github.com/coniern/project-JavaWeb-system" target="_blank" rel="noreferrer" class="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform">
                             <i class="fa fa-github text-xl"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform">
+                        <a href="#hero" class="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform">
                             <i class="fa fa-twitter text-xl"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform">
+                        <a href="projects.html" class="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform">
                             <i class="fa fa-linkedin text-xl"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform">
+                        <a href="login.html" class="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform">
                             <i class="fa fa-weixin text-xl"></i>
                         </a>
                     </div>
@@ -512,11 +560,11 @@
                 <div class="animate-slide-up" style="animation-delay: 0.2s">
                     <h4 class="text-lg font-semibold mb-4">快速链接</h4>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">首页</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">项目管理</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">模板库</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">部署管理</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">文档</a></li>
+                        <li><a href="index.html" class="text-gray-400 hover:text-white transition-colors duration-300">首页</a></li>
+                        <li><a href="projects.html" class="text-gray-400 hover:text-white transition-colors duration-300">项目管理</a></li>
+                        <li><a href="#templates" class="text-gray-400 hover:text-white transition-colors duration-300">模板库</a></li>
+                        <li><a href="#deployments" class="text-gray-400 hover:text-white transition-colors duration-300">部署管理</a></li>
+                        <li><a href="/project-management/swagger-ui/index.html" class="text-gray-400 hover:text-white transition-colors duration-300">文档</a></li>
                     </ul>
                 </div>
 
@@ -524,11 +572,11 @@
                 <div class="animate-slide-up" style="animation-delay: 0.3s">
                     <h4 class="text-lg font-semibold mb-4">资源</h4>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">API 文档</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">开发指南</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">最佳实践</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">常见问题</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">社区论坛</a></li>
+                        <li><a href="/project-management/swagger-ui/index.html" class="text-gray-400 hover:text-white transition-colors duration-300">API 文档</a></li>
+                        <li><a href="/Users/mac/Desktop/毕业论文/project-JavaWeb-system/项目梳理与面试准备.md" class="text-gray-400 hover:text-white transition-colors duration-300">开发指南</a></li>
+                        <li><a href="projects.html" class="text-gray-400 hover:text-white transition-colors duration-300">最佳实践</a></li>
+                        <li><a href="login.html" class="text-gray-400 hover:text-white transition-colors duration-300">常见问题</a></li>
+                        <li><a href="register.html" class="text-gray-400 hover:text-white transition-colors duration-300">社区论坛</a></li>
                     </ul>
                 </div>
 
@@ -555,13 +603,86 @@
             <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
                 <p class="text-gray-400 text-sm mb-4 md:mb-0">© 2026 项目管理平台. 保留所有权利</p>
                 <div class="flex space-x-6">
-                    <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors duration-300">隐私政策</a>
-                    <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors duration-300">服务条款</a>
-                    <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors duration-300">法律声明</a>
+                    <a href="/Users/mac/Desktop/毕业论文/project-JavaWeb-system/项目梳理与面试准备.md" class="text-gray-400 hover:text-white text-sm transition-colors duration-300">隐私政策</a>
+                    <a href="/Users/mac/Desktop/毕业论文/project-JavaWeb-system/项目梳理与面试准备.md" class="text-gray-400 hover:text-white text-sm transition-colors duration-300">服务条款</a>
+                    <a href="/Users/mac/Desktop/毕业论文/project-JavaWeb-system/项目梳理与面试准备.md" class="text-gray-400 hover:text-white text-sm transition-colors duration-300">法律声明</a>
                 </div>
             </div>
         </div>
     </footer>
+
+    <div id="projectDetailModal" class="fixed inset-0 bg-slate-950/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                <h2 class="text-xl font-bold">项目详情</h2>
+                <button id="closeProjectDetailModal" class="text-gray-400 hover:text-gray-700"><i class="fa fa-times text-xl"></i></button>
+            </div>
+            <div id="projectDetailContent" class="p-6 space-y-4 text-sm text-gray-700"></div>
+        </div>
+    </div>
+
+    <div id="notificationPanel" class="fixed top-20 right-4 w-[360px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 hidden z-50">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">通知中心</h3>
+                <p class="text-sm text-gray-500">项目动态与 AI 提醒</p>
+            </div>
+            <button id="closeNotificationPanel" class="text-gray-400 hover:text-gray-700"><i class="fa fa-times"></i></button>
+        </div>
+        <div id="notificationList" class="max-h-[420px] overflow-y-auto divide-y divide-gray-100"></div>
+    </div>
+
+    <div id="settingsPanel" class="fixed top-20 right-4 w-[440px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 hidden z-50">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">个人设置</h3>
+                <p class="text-sm text-gray-500">维护个人信息与密码</p>
+            </div>
+            <button id="closeSettingsPanel" class="text-gray-400 hover:text-gray-700"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="p-5 space-y-6">
+            <form id="profileForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+                        <input id="settingsUsername" class="input-field bg-gray-50" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">昵称</label>
+                        <input id="settingsNickname" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">邮箱</label>
+                        <input id="settingsEmail" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">手机号</label>
+                        <input id="settingsPhone" class="input-field">
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="btn-primary">保存资料</button>
+                </div>
+            </form>
+
+            <div class="border-t border-gray-100 pt-5">
+                <h4 class="text-base font-semibold mb-4">修改密码</h4>
+                <form id="passwordForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">旧密码</label>
+                        <input id="oldPassword" type="password" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">新密码</label>
+                        <input id="newPassword" type="password" class="input-field">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="btn-outline">更新密码</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- 返回顶部按钮 -->
     <button id="backToTop" class="fixed bottom-6 right-6 bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 hover:scale-110 transition-all duration-300 opacity-0 invisible">
@@ -569,6 +690,276 @@
     </button>
 
     <script>
+        const API_BASE = '/project-management/api';
+        let dashboardStats = null;
+        let currentProjects = [];
+        let successChart = null;
+        let timeChart = null;
+        let currentUser = null;
+
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        function authHeaders(extra = {}) {
+            const token = getToken();
+            return {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                ...extra,
+            };
+        }
+
+        function ensureAuthenticated() {
+            if (!getToken()) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        async function requestJson(url, options = {}) {
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                logout();
+                throw new Error('登录已失效');
+            }
+            return response.json();
+        }
+
+        function showModal(element) {
+            element.classList.remove('hidden');
+            element.classList.add('flex');
+        }
+
+        function hideModal(element) {
+            element.classList.add('hidden');
+            element.classList.remove('flex');
+        }
+
+        function updateUserProfile(user) {
+            currentUser = user;
+            const displayName = user?.nickname || user?.username || '管理员';
+            document.getElementById('headerUsername').textContent = displayName;
+            document.getElementById('mobileUsername').textContent = displayName;
+            document.getElementById('settingsUsername').value = user?.username || '';
+            document.getElementById('settingsNickname').value = user?.nickname || '';
+            document.getElementById('settingsEmail').value = user?.email || '';
+            document.getElementById('settingsPhone').value = user?.phone || '';
+        }
+
+        async function fetchCurrentUser() {
+            const data = await requestJson(`${API_BASE}/auth/me`, {
+                headers: authHeaders()
+            });
+            if (data.code === 200) {
+                updateUserProfile(data.data);
+            }
+        }
+
+        async function fetchDashboardStats() {
+            const data = await requestJson(`${API_BASE}/projects/dashboard`, {
+                headers: authHeaders()
+            });
+            if (data.code !== 200) {
+                return;
+            }
+            dashboardStats = data.data;
+            document.getElementById('statTotalProjects').textContent = dashboardStats.totalProjects;
+            document.getElementById('statRegisteredUsers').textContent = dashboardStats.registeredUsers;
+            document.getElementById('statOnTimeRate').textContent = `${dashboardStats.onTimeRate}%`;
+            document.getElementById('statSatisfactionRate').textContent = `${dashboardStats.satisfactionRate}%`;
+            renderCharts();
+        }
+
+        async function fetchAiStatus() {
+            const data = await requestJson(`${API_BASE}/ai/status`, {
+                headers: authHeaders()
+            });
+            if (data.code !== 200) return;
+            document.getElementById('aiProviderName').textContent = data.data.provider || 'Ollama';
+            document.getElementById('aiModelName').textContent = data.data.model || '-';
+            document.getElementById('aiConnectionStatus').textContent = data.data.connected ? '已连接' : '未连接';
+            document.getElementById('aiConnectionStatus').className = data.data.connected ? 'font-medium text-emerald-600' : 'font-medium text-amber-600';
+            document.getElementById('aiFallbackStatus').textContent = data.data.fallbackEnabled ? '已启用' : '未启用';
+        }
+
+        async function fetchDashboardAiInsight() {
+            const data = await requestJson(`${API_BASE}/ai/dashboard-insight`, {
+                headers: authHeaders()
+            });
+            if (data.code !== 200) {
+                document.getElementById('dashboardAiInsight').textContent = 'AI 洞察获取失败，请稍后重试。';
+                return;
+            }
+            document.getElementById('dashboardAiInsight').textContent = data.data.insight;
+        }
+
+        function renderNotifications() {
+            const items = [];
+            const projectCount = currentProjects.length;
+            if (projectCount) {
+                items.push({
+                    title: '项目看板已更新',
+                    content: `当前共有 ${projectCount} 个项目，建议优先关注进行中和待审核项目。`,
+                    type: '项目'
+                });
+            }
+            if (dashboardStats) {
+                items.push({
+                    title: '统计卡片已刷新',
+                    content: `注册用户 ${dashboardStats.registeredUsers} 人，平均进度 ${dashboardStats.averageProgress}% 。`,
+                    type: '统计'
+                });
+            }
+            const aiConnected = document.getElementById('aiConnectionStatus')?.textContent === '已连接';
+            items.push({
+                title: aiConnected ? 'AI 模型已连接' : 'AI 已启用回退策略',
+                content: aiConnected ? '当前 AI 功能正在调用本地免费大模型。' : '本地模型不可用时会自动使用规则分析，确保功能稳定。',
+                type: 'AI'
+            });
+
+            const container = document.getElementById('notificationList');
+            container.innerHTML = items.map(item => `
+                <div class="px-5 py-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="font-medium text-gray-900">${item.title}</p>
+                        <span class="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">${item.type}</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2 leading-6">${item.content}</p>
+                </div>
+            `).join('');
+        }
+
+        function togglePanel(panelId) {
+            const panels = ['notificationPanel', 'settingsPanel'];
+            panels.forEach(id => {
+                if (id !== panelId) {
+                    document.getElementById(id).classList.add('hidden');
+                }
+            });
+            document.getElementById(panelId).classList.toggle('hidden');
+        }
+
+        async function updateProfile(event) {
+            event.preventDefault();
+            if (!currentUser?.id) return;
+            const payload = {
+                nickname: document.getElementById('settingsNickname').value.trim(),
+                email: document.getElementById('settingsEmail').value.trim(),
+                phone: document.getElementById('settingsPhone').value.trim()
+            };
+            const data = await requestJson(`${API_BASE}/users/${currentUser.id}/profile`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify(payload)
+            });
+            if (data.code !== 200) {
+                alert(data.message || '更新资料失败');
+                return;
+            }
+            await fetchCurrentUser();
+            alert('个人资料已更新');
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+            const oldPassword = document.getElementById('oldPassword').value.trim();
+            const newPassword = document.getElementById('newPassword').value.trim();
+            if (!oldPassword || !newPassword) {
+                alert('请填写完整密码信息');
+                return;
+            }
+            const data = await requestJson(`${API_BASE}/users/change-password?oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`, {
+                method: 'PUT',
+                headers: authHeaders()
+            });
+            if (data.code !== 200) {
+                alert(data.message || '修改密码失败');
+                return;
+            }
+            document.getElementById('passwordForm').reset();
+            alert('密码已更新，请牢记新密码');
+        }
+
+        function renderCharts() {
+            if (!dashboardStats) return;
+            const successCtx = document.getElementById('deploymentSuccessChart').getContext('2d');
+            const timeCtx = document.getElementById('deploymentTimeChart').getContext('2d');
+
+            if (successChart) successChart.destroy();
+            if (timeChart) timeChart.destroy();
+
+            successChart = new Chart(successCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '部署成功率',
+                        data: dashboardStats.deploymentSuccessRateTrend,
+                        borderColor: '#165DFF',
+                        backgroundColor: 'rgba(22, 93, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#165DFF',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: value => `${value}%`
+                            }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            timeChart = new Chart(timeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '平均部署时间 (分钟)',
+                        data: dashboardStats.deploymentTimeTrend,
+                        backgroundColor: '#165DFF',
+                        borderRadius: 6,
+                        barThickness: 30
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
         // 移动端菜单切换
         document.getElementById('mobileMenuBtn').addEventListener('click', function() {
             const mobileMenu = document.getElementById('mobileMenu');
@@ -606,31 +997,19 @@
         });
 
         // 获取项目数据
-        function fetchProjects() {
-            const token = localStorage.getItem('token');
-            
-            fetch('/api/projects', {
+        async function fetchProjects() {
+            const keyword = document.getElementById('homeSearchInput').value.trim();
+            const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : '';
+            const data = await requestJson(`${API_BASE}/projects${query}`, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : ''
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.code === 200) {
-                    renderProjects(data.data);
-                } else {
-                    console.error('获取项目列表失败:', data.message);
-                    // 使用模拟数据
-                    useMockProjects();
-                }
-            })
-            .catch(error => {
-                console.error('请求失败:', error);
-                // 使用模拟数据
-                useMockProjects();
+                headers: authHeaders()
             });
+            if (data.code === 200) {
+                currentProjects = Array.isArray(data.data) ? data.data : [];
+                renderProjects(currentProjects);
+                return;
+            }
+            throw new Error(data.message || '获取项目列表失败');
         }
 
         // 渲染项目列表
@@ -681,9 +1060,9 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex space-x-3">
-                            <a href="#" class="text-primary hover:text-primary/80 transition-colors duration-300">查看</a>
-                            <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors duration-300">编辑</a>
-                            <a href="#" class="text-danger hover:text-danger/80 transition-colors duration-300">删除</a>
+                            <button class="text-primary hover:text-primary/80 transition-colors duration-300" data-action="view" data-id="${project.id}">查看</button>
+                            <button class="text-gray-600 hover:text-gray-900 transition-colors duration-300" data-action="edit" data-id="${project.id}">编辑</button>
+                            <button class="text-danger hover:text-danger/80 transition-colors duration-300" data-action="delete" data-id="${project.id}">删除</button>
                         </div>
                     </td>
                 `;
@@ -692,191 +1071,115 @@
             });
         }
 
-        // 使用模拟数据
-        function useMockProjects() {
-            const mockProjects = [
-                {
-                    id: 1,
-                    name: '电商平台项目',
-                    description: '电商系统开发',
-                    status: '进行中',
-                    createdAt: '2026-01-01',
-                    manager: '张三'
-                },
-                {
-                    id: 2,
-                    name: '企业官网重构',
-                    description: '前端开发',
-                    status: '已完成',
-                    createdAt: '2025-12-15',
-                    manager: '李四'
-                },
-                {
-                    id: 3,
-                    name: '移动应用后端',
-                    description: '后端开发',
-                    status: '待审核',
-                    createdAt: '2026-01-03',
-                    manager: '王五'
-                },
-                {
-                    id: 4,
-                    name: '数据分析平台',
-                    description: '大数据开发',
-                    status: '已暂停',
-                    createdAt: '2025-11-20',
-                    manager: '赵六'
-                },
-                {
-                    id: 5,
-                    name: '物联网项目',
-                    description: '硬件集成',
-                    status: '进行中',
-                    createdAt: '2026-01-05',
-                    manager: '孙七'
-                }
-            ];
-            
-            renderProjects(mockProjects);
+        async function showProjectDetail(projectId) {
+            const data = await requestJson(`${API_BASE}/projects/${projectId}`, {
+                headers: authHeaders()
+            });
+            if (data.code !== 200) {
+                alert(data.message || '获取项目详情失败');
+                return;
+            }
+            const project = data.data;
+            document.getElementById('projectDetailContent').innerHTML = `
+                <div>
+                    <p class="text-gray-500">项目名称</p>
+                    <p class="text-lg font-semibold mt-1">${project.name}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">项目描述</p>
+                    <p class="mt-1">${project.description || '暂无描述'}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-500">技术栈</p>
+                        <p class="mt-1">${project.techStack}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">状态</p>
+                        <p class="mt-1">${project.statusLabel}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">负责人</p>
+                        <p class="mt-1">${project.manager}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">进度</p>
+                        <p class="mt-1">${project.progress || 0}%</p>
+                    </div>
+                </div>
+            `;
+            showModal(document.getElementById('projectDetailModal'));
         }
 
-        // 部署成功率图表
-        const successCtx = document.getElementById('deploymentSuccessChart').getContext('2d');
-        const successChart = new Chart(successCtx, {
-            type: 'line',
-            data: {
-                labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
-                datasets: [{
-                    label: '部署成功率',
-                    data: [92, 95, 94, 96, 98, 99],
-                    borderColor: '#165DFF',
-                    backgroundColor: 'rgba(22, 93, 255, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#165DFF',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(29, 41, 57, 0.9)',
-                        padding: 12,
-                        cornerRadius: 8,
-                        titleFont: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            size: 13
-                        },
-                        callbacks: {
-                            label: function(context) {
-                                return `成功率: ${context.parsed.y}%`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                },
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
-                animation: {
-                    duration: 2000,
-                    easing: 'easeOutQuart'
-                }
+        async function deleteProject(projectId) {
+            if (!window.confirm('确认删除这个项目吗？')) return;
+            const data = await requestJson(`${API_BASE}/projects/${projectId}`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (data.code !== 200) {
+                alert(data.message || '删除项目失败');
+                return;
             }
-        });
+            await Promise.all([fetchDashboardStats(), fetchProjects()]);
+        }
 
-        // 部署时间趋势图表
-        const timeCtx = document.getElementById('deploymentTimeChart').getContext('2d');
-        const timeChart = new Chart(timeCtx, {
-            type: 'bar',
-            data: {
-                labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
-                datasets: [{
-                    label: '平均部署时间 (分钟)',
-                    data: [15, 12, 10, 8, 6, 5],
-                    backgroundColor: '#165DFF',
-                    borderRadius: 6,
-                    barThickness: 30
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(29, 41, 57, 0.9)',
-                        padding: 12,
-                        cornerRadius: 8,
-                        titleFont: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            size: 13
-                        },
-                        callbacks: {
-                            label: function(context) {
-                                return `部署时间: ${context.parsed.y} 分钟`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                },
-                animation: {
-                    duration: 2000,
-                    easing: 'easeOutQuart'
-                }
+        document.getElementById('projectTableBody').addEventListener('click', async (event) => {
+            const button = event.target.closest('button[data-action]');
+            if (!button) return;
+            const projectId = button.dataset.id;
+            const action = button.dataset.action;
+            if (action === 'view') {
+                await showProjectDetail(projectId);
+            } else if (action === 'edit') {
+                window.location.href = `projects.html?edit=${projectId}`;
+            } else if (action === 'delete') {
+                await deleteProject(projectId);
             }
         });
 
         // 页面加载时获取项目数据
-        window.addEventListener('DOMContentLoaded', function() {
-            fetchProjects();
+        window.addEventListener('DOMContentLoaded', async function() {
+            if (!ensureAuthenticated()) return;
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('mobileLogoutBtn').addEventListener('click', logout);
+            document.getElementById('notificationToggleBtn').addEventListener('click', () => {
+                renderNotifications();
+                togglePanel('notificationPanel');
+            });
+            document.getElementById('settingsToggleBtn').addEventListener('click', () => togglePanel('settingsPanel'));
+            document.getElementById('closeNotificationPanel').addEventListener('click', () => document.getElementById('notificationPanel').classList.add('hidden'));
+            document.getElementById('closeSettingsPanel').addEventListener('click', () => document.getElementById('settingsPanel').classList.add('hidden'));
+            document.getElementById('refreshAiInsightBtn').addEventListener('click', fetchDashboardAiInsight);
+            document.getElementById('closeProjectDetailModal').addEventListener('click', () => hideModal(document.getElementById('projectDetailModal')));
+            document.getElementById('projectDetailModal').addEventListener('click', (event) => {
+                if (event.target.id === 'projectDetailModal') {
+                    hideModal(document.getElementById('projectDetailModal'));
+                }
+            });
+            document.getElementById('profileForm').addEventListener('submit', updateProfile);
+            document.getElementById('passwordForm').addEventListener('submit', changePassword);
+            document.addEventListener('click', (event) => {
+                const notificationPanel = document.getElementById('notificationPanel');
+                const settingsPanel = document.getElementById('settingsPanel');
+                if (!notificationPanel.contains(event.target) && !document.getElementById('notificationToggleBtn').contains(event.target)) {
+                    notificationPanel.classList.add('hidden');
+                }
+                if (!settingsPanel.contains(event.target) && !document.getElementById('settingsToggleBtn').contains(event.target)) {
+                    settingsPanel.classList.add('hidden');
+                }
+            });
+            document.getElementById('homeSearchInput').addEventListener('keydown', async (event) => {
+                if (event.key === 'Enter') {
+                    await fetchProjects();
+                }
+            });
+
+            try {
+                await Promise.all([fetchCurrentUser(), fetchDashboardStats(), fetchProjects(), fetchAiStatus(), fetchDashboardAiInsight()]);
+            } catch (error) {
+                console.error(error);
+            }
             
             // 初始化动画
             const animateElements = document.querySelectorAll('.animate-fade-in, .animate-slide-up, .animate-slide-in-left, .animate-slide-in-right');

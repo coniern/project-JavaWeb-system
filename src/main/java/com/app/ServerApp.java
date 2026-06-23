@@ -1,5 +1,10 @@
 package com.app;
 
+/*
+ * 历史 Mock 入口，保留源码供参考。
+ * 当前项目的正式启动类为 com.example.projectmanagement.ProjectManagementApplication。
+ */
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.*;
