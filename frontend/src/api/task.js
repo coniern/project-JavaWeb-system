@@ -1,25 +1,25 @@
 import request from './request'
 
 export function getTaskList(params) {
-  return request.get('/task/list', { params })
+  return request.get('/tasks', { params })
 }
 
 export function getTaskDetail(id) {
-  return request.get(`/task/${id}`)
+  return request.get(`/tasks/${id}`)
 }
 
 export function createTask(data) {
-  return request.post('/task/create', data)
+  return request.post('/tasks', data)
 }
 
-export function updateTask(data) {
-  return request.put('/task/update', data)
+export function updateTask(id, data) {
+  return request.put(`/tasks/${id}`, data)
 }
 
 export function deleteTask(id) {
-  return request.delete(`/task/delete/${id}`)
+  return request.delete(`/tasks/${id}`)
 }
 
-export function getTaskStats(projectId) {
-  return request.get(`/task/stats/${projectId}`)
+export function getTaskStats(params) {
+  return request.get('/tasks/stats', { params })
 }

@@ -1,11 +1,7 @@
 package com.example.projectmanagement.controller;
 
-import com.example.projectmanagement.controller.BaseController.ApiResponse;
 import com.example.projectmanagement.entity.User;
 import com.example.projectmanagement.service.UserService;
-import com.example.projectmanagement.utils.LogUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,335 +9,272 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-/**
- * 用户管理控制器
- * 处理用户相关的HTTP请求
- */
 @RestController
 @RequestMapping("/api/users")
 public class UserController extends BaseController {
-    
-    @Autowired
-    private UserService userService;
-    
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private LogUtils logUtils;
-    
-    @Autowired
-    private HttpServletRequest request;
-    
-    /**
-     * 获取客户端IP地址
-     */
-    private String getClientIp() {
-        String ip = request.getHeader("x-forwarded-for");
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        // 多级代理的情况下，第一个IP为客户端真实IP
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-        return ip;
-    }
-    
-    /**
-     * 获取当前登录用户信息
-     */
-    @GetMapping("/me")
-    public ApiResponse<User> getCurrentUser() {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
-                return error("用户未登录");
-            }
-            
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            User user = userService.findByUsername(userDetails.getUsername());
-            if (user == null) {
-                logUtils.logDebug("当前用户获取信息失败：用户不存在");
-                return error("用户不存在");
-            }
-            
-            // 清除密码信息
-            user.setPassword(null);
-            logUtils.logDebug("用户获取个人信息: " + userDetails.getUsername());
-            return success(user);
-        } catch (Exception e) {
-            logUtils.logException("用户管理", "获取当前用户信息", e);
-            return error("获取用户信息失败");
-        }
-    }
-    
-    /**
-     * 获取用户列表
-     * 仅管理员可以访问
-     */
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<User>> getUserList() {
-        try {
-            String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-            List<User> users = userService.list();
-            // 清除所有用户的密码信息
-            users.forEach(user -> user.setPassword(null));
-            logUtils.logOperation("用户管理", "获取用户列表", true, "当前用户: " + currentUsername + ", 列表大小: " + users.size());
-            return success(users);
-        } catch (Exception e) {
-            logUtils.logException("用户管理", "获取用户列表", e);
-            return error("获取用户列表失败");
-        }
-    }
-    
-    /**
-     * 获取用户详情
-     * 仅管理员或用户本人可以访问
-     */
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
-    public ApiResponse<User> getUserById(@PathVariable Long id) {
-        try {
-            String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = userService.getById(id);
-            if (user == null) {
-                logUtils.logOperation("用户管理", "获取用户详情", false, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 原因: 用户不存在");
-                return error("用户不存在");
-            }
-            
-            // 清除密码信息
-            user.setPassword(null);
-            logUtils.logOperation("用户管理", "获取用户详情", true, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 用户名: " + user.getUsername());
-            return success(user);
-        } catch (Exception e) {
-            logUtils.logException("用户管理", "获取用户详情", e);
-            return error("获取用户详情失败");
-        }
-    }
-    
-    /**
-     * 更新用户信息
-     * 仅管理员或用户本人可以访问
-     */
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
-    public ApiResponse<Boolean> updateUser(@PathVariable Long id, @Valid @RequestBody User user) {
-        try {
-            String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-            // 检查用户是否存在
-            User existingUser = userService.getById(id);
-            if (existingUser == null) {
-                logUtils.logOperation("用户管理", "更新用户信息", false, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 原因: 用户不存在");
-                return error("用户不存在");
-            }
-            
-            // 记录更新前的信息摘要
-            String originalInfo = "用户ID: " + id + ", 用户名: " + existingUser.getUsername();
-            
-            // 设置用户ID
-            user.setId(id);
-            
-            // 如果不是管理员，不允许修改其他用户的角色和状态
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-                UserDetails currentUser = (UserDetails) authentication.getPrincipal();
-                User currentUserEntity = userService.findByUsername(currentUser.getUsername());
-                if (!currentUserEntity.getId().equals(id)) {
-                    // 非管理员不能修改其他用户
-                    logUtils.logOperation("用户管理", "更新用户信息", false, "当前用户: " + currentUsername + ", " + originalInfo + ", 原因: 没有权限");
-                    return error("没有权限修改此用户信息");
-                }
-            }
-            
-            // 更新用户信息
-            boolean result = userService.updateUser(user);
-            if (!result) {
-                logUtils.logOperation("用户管理", "更新用户信息", false, "当前用户: " + currentUsername + ", " + originalInfo + ", 原因: 更新失败");
-                return error("更新用户信息失败");
-            }
-            
-            logUtils.logOperation("用户管理", "更新用户信息", true, "当前用户: " + currentUsername + ", " + originalInfo + ", IP: " + getClientIp());
-            return success(true);
-        } catch (Exception e) {
-            logUtils.logException("用户管理", "更新用户信息", e);
-            return error("更新用户信息失败");
-        }
+
+    private final UserService userService;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public UserController(UserService userService, BCryptPasswordEncoder passwordEncoder) {
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    /**
-     * 更新个人资料
-     */
+    @GetMapping("/me")
+    public ApiResponse<Map<String, Object>> getCurrentUser() {
+        User user = currentUserEntity();
+        if (user == null) {
+            return error("用户未登录");
+        }
+        return success(toView(user));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER', 'TESTER')")
+    public ApiResponse<List<Map<String, Object>>> getUserList() {
+        List<Map<String, Object>> users = userService.list().stream().map(this::toView).toList();
+        return success(users);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Map<String, Object>> createUser(@RequestBody CreateUserRequest requestBody) {
+        if (requestBody.getUsername() == null || requestBody.getUsername().isBlank()) {
+            return error("用户名不能为空");
+        }
+        if (requestBody.getPassword() == null || requestBody.getPassword().length() < 6) {
+            return error("密码长度不能少于6位");
+        }
+        User user = new User();
+        user.setUsername(requestBody.getUsername().trim());
+        user.setPassword(requestBody.getPassword());
+        user.setNickname(requestBody.getNickname());
+        user.setEmail(requestBody.getEmail());
+        user.setPhone(requestBody.getPhone());
+        user.setStatus(requestBody.getStatus() == null ? 1 : requestBody.getStatus());
+
+        boolean created = userService.createUser(user, requestBody.getRoleCode());
+        if (!created) {
+            return error("创建用户失败，用户名可能已存在或角色无效");
+        }
+        return success(toView(userService.getById(user.getId())));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
+    public ApiResponse<Map<String, Object>> getUserById(@PathVariable Long id) {
+        User user = userService.getById(id);
+        if (user == null) {
+            return error("用户不存在");
+        }
+        return success(toView(user));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
+    public ApiResponse<Boolean> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequest requestBody) {
+        User existingUser = userService.getById(id);
+        if (existingUser == null) {
+            return error("用户不存在");
+        }
+
+        User currentUser = currentUserEntity();
+        boolean admin = hasAdminRole();
+        if (!admin && (currentUser == null || !id.equals(currentUser.getId()))) {
+            return error("没有权限修改此用户信息");
+        }
+
+        User updateUser = new User();
+        updateUser.setId(id);
+        updateUser.setNickname(requestBody.getNickname());
+        updateUser.setEmail(requestBody.getEmail());
+        updateUser.setPhone(requestBody.getPhone());
+        if (admin && requestBody.getStatus() != null) {
+            updateUser.setStatus(requestBody.getStatus());
+        }
+        if (requestBody.getPassword() != null && !requestBody.getPassword().isBlank()) {
+            if (requestBody.getPassword().length() < 6) {
+                return error("密码长度不能少于6位");
+            }
+            updateUser.setPassword(passwordEncoder.encode(requestBody.getPassword()));
+        }
+
+        boolean updated = userService.updateUser(updateUser);
+        if (!updated) {
+            return error("更新用户信息失败");
+        }
+        if (admin && requestBody.getRoleCode() != null && !requestBody.getRoleCode().isBlank()) {
+            boolean roleUpdated = userService.updateRole(id, requestBody.getRoleCode());
+            if (!roleUpdated) {
+                return error("用户信息已更新，但角色更新失败");
+            }
+        }
+        return success(true);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> deleteUser(@PathVariable Long id) {
+        if (id.equals(getCurrentUserId())) {
+            return error("不能删除当前登录账号");
+        }
+        if (!userService.deleteUser(id)) {
+            return error("删除用户失败");
+        }
+        return success();
+    }
+
     @PutMapping("/{id}/profile")
     @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ApiResponse<Boolean> updateProfile(@PathVariable Long id, @RequestBody UpdateProfileRequest requestBody) {
-        try {
-            User existingUser = userService.getById(id);
-            if (existingUser == null) {
-                return error("用户不存在");
-            }
-
-            User user = new User();
-            user.setId(id);
-            user.setNickname(requestBody.getNickname());
-            user.setEmail(requestBody.getEmail());
-            user.setPhone(requestBody.getPhone());
-            user.setUpdateTime(LocalDateTime.now());
-
-            boolean result = userService.updateUser(user);
-            if (!result) {
-                return error("更新个人资料失败");
-            }
-            return success(true);
-        } catch (Exception e) {
-            logUtils.logException("用户管理", "更新个人资料", e);
-            return error("更新个人资料失败");
+        User existingUser = userService.getById(id);
+        if (existingUser == null) {
+            return error("用户不存在");
         }
+        User user = new User();
+        user.setId(id);
+        user.setNickname(requestBody.getNickname());
+        user.setEmail(requestBody.getEmail());
+        user.setPhone(requestBody.getPhone());
+        user.setUpdateTime(LocalDateTime.now());
+        return success(userService.updateUser(user));
     }
-    
-    /**
-     * 修改用户状态（启用/禁用）
-     * 仅管理员可以访问
-     */
+
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Boolean> updateUserStatus(@PathVariable Long id, @RequestParam Integer status) {
-        try {
-            String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-            // 检查用户是否存在
-            User existingUser = userService.getById(id);
-            if (existingUser == null) {
-                logUtils.logOperation("用户管理", "修改用户状态", false, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 原因: 用户不存在");
-                return error("用户不存在");
-            }
-            
-            // 验证状态值
-            if (status != 0 && status != 1) {
-                logUtils.logOperation("用户管理", "修改用户状态", false, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 原因: 状态值无效");
-                return error("状态值无效，只能是0（禁用）或1（启用）");
-            }
-            
-            // 记录状态变更
-            String oldStatus = existingUser.getStatus() == 1 ? "启用" : "禁用";
-            String newStatus = status == 1 ? "启用" : "禁用";
-            
-            // 更新用户状态
-            User user = new User();
-            user.setId(id);
-            user.setStatus(status);
-            user.setUpdateTime(LocalDateTime.now());
-            
-            boolean result = userService.updateUser(user);
-            if (!result) {
-                logUtils.logOperation("用户管理", "修改用户状态", false, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 用户名: " + existingUser.getUsername() + ", 原状态: " + oldStatus + ", 新状态: " + newStatus);
-                return error("更新用户状态失败");
-            }
-            
-            logUtils.logOperation("用户管理", "修改用户状态", true, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 用户名: " + existingUser.getUsername() + ", 原状态: " + oldStatus + ", 新状态: " + newStatus + ", IP: " + getClientIp());
-            return success(true);
-        } catch (Exception e) {
-            logUtils.logException("用户管理", "修改用户状态", e);
-            return error("更新用户状态失败");
+        if (status == null || (status != 0 && status != 1)) {
+            return error("状态值无效，只能是0（禁用）或1（启用）");
         }
+        User existingUser = userService.getById(id);
+        if (existingUser == null) {
+            return error("用户不存在");
+        }
+        User user = new User();
+        user.setId(id);
+        user.setStatus(status);
+        user.setUpdateTime(LocalDateTime.now());
+        return success(userService.updateUser(user));
     }
-    
-    /**
-     * 重置用户密码
-     * 仅管理员可以访问
-     */
+
     @PutMapping("/{id}/reset-password")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Boolean> resetUserPassword(@PathVariable Long id, @RequestParam String newPassword) {
-        try {
-            String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-            // 检查用户是否存在
-            User existingUser = userService.getById(id);
-            if (existingUser == null) {
-                logUtils.logOperation("用户管理", "重置密码", false, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 原因: 用户不存在");
-                return error("用户不存在");
-            }
-            
-            // 验证密码长度
-            if (newPassword == null || newPassword.length() < 6) {
-                logUtils.logOperation("用户管理", "重置密码", false, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 用户名: " + existingUser.getUsername() + ", 原因: 密码长度不足");
-                return error("密码长度不能少于6位");
-            }
-            
-            // 更新用户密码
-            User user = new User();
-            user.setId(id);
-            user.setPassword(passwordEncoder.encode(newPassword));
-            user.setUpdateTime(LocalDateTime.now());
-            
-            boolean result = userService.updateUser(user);
-            if (!result) {
-                logUtils.logOperation("用户管理", "重置密码", false, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 用户名: " + existingUser.getUsername());
-                return error("重置密码失败");
-            }
-            
-            logUtils.logOperation("用户管理", "重置密码", true, "当前用户: " + currentUsername + ", 用户ID: " + id + ", 用户名: " + existingUser.getUsername() + ", IP: " + getClientIp());
-            return success(true);
-        } catch (Exception e) {
-            logUtils.logException("用户管理", "重置密码", e);
-            return error("重置密码失败");
+        if (newPassword == null || newPassword.length() < 6) {
+            return error("密码长度不能少于6位");
         }
+        if (userService.getById(id) == null) {
+            return error("用户不存在");
+        }
+        User user = new User();
+        user.setId(id);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdateTime(LocalDateTime.now());
+        return success(userService.updateUser(user));
     }
-    
-    /**
-     * 修改自己的密码
-     */
+
     @PutMapping("/change-password")
-    public ApiResponse<Boolean> changePassword(@RequestParam String oldPassword, 
-                                              @RequestParam String newPassword) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
-                return error("用户未登录");
-            }
-            
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String username = userDetails.getUsername();
-            User user = userService.findByUsername(username);
-            
-            // 验证旧密码
-            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-                logUtils.logOperation("用户管理", "修改个人密码", false, "当前用户: " + username + ", 原因: 旧密码错误");
-                return error("旧密码不正确");
-            }
-            
-            // 验证新密码长度
-            if (newPassword == null || newPassword.length() < 6) {
-                logUtils.logOperation("用户管理", "修改个人密码", false, "当前用户: " + username + ", 原因: 新密码长度不足");
-                return error("新密码长度不能少于6位");
-            }
-            
-            // 更新密码
-            user.setPassword(passwordEncoder.encode(newPassword));
-            user.setUpdateTime(LocalDateTime.now());
-            
-            boolean result = userService.updateUser(user);
-            if (!result) {
-                logUtils.logOperation("用户管理", "修改个人密码", false, "当前用户: " + username + ", 原因: 更新失败");
-                return error("修改密码失败");
-            }
-            
-            logUtils.logOperation("用户管理", "修改个人密码", true, "当前用户: " + username + ", IP: " + getClientIp());
-            return success(true);
-        } catch (Exception e) {
-            logUtils.logException("用户管理", "修改个人密码", e);
-            return error("修改密码失败");
+    public ApiResponse<Boolean> changePassword(@RequestParam String oldPassword, @RequestParam String newPassword) {
+        User currentUser = currentUserEntity();
+        if (currentUser == null) {
+            return error("用户未登录");
         }
+        if (!passwordEncoder.matches(oldPassword, currentUser.getPassword())) {
+            return error("旧密码不正确");
+        }
+        if (newPassword == null || newPassword.length() < 6) {
+            return error("新密码长度不能少于6位");
+        }
+        User user = new User();
+        user.setId(currentUser.getId());
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdateTime(LocalDateTime.now());
+        return success(userService.updateUser(user));
+    }
+
+    private User currentUserEntity() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            return null;
+        }
+        return userService.findByUsername(userDetails.getUsername());
+    }
+
+    private boolean hasAdminRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+    }
+
+    private Map<String, Object> toView(User user) {
+        User latest = userService.getById(user.getId());
+        User source = latest == null ? user : latest;
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("id", source.getId());
+        view.put("username", source.getUsername());
+        view.put("nickname", source.getNickname() == null ? "" : source.getNickname());
+        view.put("email", source.getEmail() == null ? "" : source.getEmail());
+        view.put("phone", source.getPhone() == null ? "" : source.getPhone());
+        view.put("status", source.getStatus() == null ? 1 : source.getStatus());
+        view.put("roleCodes", userService.findRolesByUserId(source.getId()));
+        view.put("createTime", source.getCreateTime() == null ? "" : source.getCreateTime().toString().replace('T', ' '));
+        return view;
+    }
+
+    static class CreateUserRequest {
+        private String username;
+        private String password;
+        private String nickname;
+        private String email;
+        private String phone;
+        private Integer status;
+        private String roleCode;
+
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+        public String getNickname() { return nickname; }
+        public void setNickname(String nickname) { this.nickname = nickname; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPhone() { return phone; }
+        public void setPhone(String phone) { this.phone = phone; }
+        public Integer getStatus() { return status; }
+        public void setStatus(Integer status) { this.status = status; }
+        public String getRoleCode() { return roleCode; }
+        public void setRoleCode(String roleCode) { this.roleCode = roleCode; }
+    }
+
+    static class UpdateUserRequest {
+        private String nickname;
+        private String email;
+        private String phone;
+        private Integer status;
+        private String password;
+        private String roleCode;
+
+        public String getNickname() { return nickname; }
+        public void setNickname(String nickname) { this.nickname = nickname; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPhone() { return phone; }
+        public void setPhone(String phone) { this.phone = phone; }
+        public Integer getStatus() { return status; }
+        public void setStatus(Integer status) { this.status = status; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+        public String getRoleCode() { return roleCode; }
+        public void setRoleCode(String roleCode) { this.roleCode = roleCode; }
     }
 
     static class UpdateProfileRequest {
@@ -349,28 +282,11 @@ public class UserController extends BaseController {
         private String email;
         private String phone;
 
-        public String getNickname() {
-            return nickname;
-        }
-
-        public void setNickname(String nickname) {
-            this.nickname = nickname;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getPhone() {
-            return phone;
-        }
-
-        public void setPhone(String phone) {
-            this.phone = phone;
-        }
+        public String getNickname() { return nickname; }
+        public void setNickname(String nickname) { this.nickname = nickname; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPhone() { return phone; }
+        public void setPhone(String phone) { this.phone = phone; }
     }
 }

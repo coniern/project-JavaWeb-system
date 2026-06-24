@@ -7,9 +7,13 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import App from './App.vue'
 import router from './router'
+import './styles.css'
+import { useSessionStore } from './stores/session'
 
 const app = createApp(App)
 const pinia = createPinia()
+const sessionStore = useSessionStore(pinia)
+sessionStore.hydrate()
 
 // 注册 Element Plus 图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

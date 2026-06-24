@@ -2,6 +2,8 @@ package com.example.projectmanagement.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.example.projectmanagement.entity.User;
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -38,4 +40,13 @@ public interface UserMapper extends BaseMapper<User> {
      */
     @Select("SELECT r.code FROM sys_role r JOIN sys_user_role ur ON r.id = ur.role_id WHERE ur.user_id = #{userId}")
     List<String> findRolesByUserId(@Param("userId") Long userId);
+
+    @Select("SELECT id FROM sys_role WHERE code = #{roleCode}")
+    Long findRoleIdByCode(@Param("roleCode") String roleCode);
+
+    @Insert("INSERT INTO sys_user_role (user_id, role_id) VALUES (#{userId}, #{roleId})")
+    int insertUserRole(@Param("userId") Long userId, @Param("roleId") Long roleId);
+
+    @Delete("DELETE FROM sys_user_role WHERE user_id = #{userId}")
+    int deleteUserRoles(@Param("userId") Long userId);
 }

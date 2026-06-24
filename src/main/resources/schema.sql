@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS project_member;
+DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS project;
 DROP TABLE IF EXISTS sys_user_role;
 DROP TABLE IF EXISTS sys_role;
@@ -44,6 +45,19 @@ CREATE TABLE project (
     create_time TIMESTAMP,
     update_time TIMESTAMP,
     progress INT DEFAULT 0
+);
+
+CREATE TABLE task (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    project_id BIGINT NOT NULL,
+    title VARCHAR(128) NOT NULL,
+    description VARCHAR(255),
+    status VARCHAR(32) NOT NULL,
+    priority INT NOT NULL DEFAULT 2,
+    assignee_id BIGINT NOT NULL,
+    due_date VARCHAR(32),
+    create_time TIMESTAMP,
+    update_time TIMESTAMP
 );
 
 CREATE TABLE project_member (

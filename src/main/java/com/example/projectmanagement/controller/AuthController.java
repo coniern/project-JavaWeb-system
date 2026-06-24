@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -86,14 +88,11 @@ public class AuthController extends BaseController {
             
             // 查询用户信息
             User user = userService.findByUsername(loginRequest.getUsername());
-            if (user != null) {
-                user.setPassword(null);
-            }
             
             // 构建响应数据
             Map<String, Object> response = new HashMap<>();
             response.put("token", jwt);
-            response.put("user", user);
+            response.put("user", buildUserPayload(user));
             
             // 记录登录成功日志
             logUtils.logLogin(loginRequest.getUsername(), true, getClientIp());
@@ -149,7 +148,7 @@ public class AuthController extends BaseController {
      * 获取当前登录用户信息
      */
     @GetMapping("/me")
-    public ApiResponse<User> getCurrentUser(Authentication authentication) {
+    public ApiResponse<Map<String, Object>> getCurrentUser(Authentication authentication) {
         try {
             if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
                 return error("用户未登录");
@@ -157,16 +156,28 @@ public class AuthController extends BaseController {
             
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             User user = userService.findByUsername(userDetails.getUsername());
-            if (user != null) {
-                user.setPassword(null);
-            }
             
             logUtils.logDebug("用户获取个人信息: " + userDetails.getUsername());
-            return success(user);
+            return success(buildUserPayload(user));
         } catch (Exception e) {
             logUtils.logException("认证模块", "获取用户信息", e);
             return error("获取用户信息失败");
         }
+    }
+
+    private Map<String, Object> buildUserPayload(User user) {
+        if (user == null) {
+            return Map.of();
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("id", user.getId());
+        payload.put("username", user.getUsername());
+        payload.put("nickname", user.getNickname());
+        payload.put("email", user.getEmail());
+        payload.put("phone", user.getPhone());
+        payload.put("status", user.getStatus());
+        payload.put("roleCodes", userService.findRolesByUserId(user.getId()));
+        return payload;
     }
     
     // 登录请求参数类

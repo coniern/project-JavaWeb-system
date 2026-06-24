@@ -33,11 +33,34 @@ public interface UserService extends IService<User> {
     boolean register(User user);
 
     /**
+     * 创建用户并写入角色关系
+     * @param user 用户信息
+     * @param roleCode 角色编码
+     * @return 创建结果
+     */
+    boolean createUser(User user, String roleCode);
+
+    /**
      * 更新用户信息
      * @param user 用户信息
      * @return 更新结果
      */
     boolean updateUser(User user);
+
+    /**
+     * 更新用户角色
+     * @param userId 用户ID
+     * @param roleCode 角色编码
+     * @return 更新结果
+     */
+    boolean updateRole(Long userId, String roleCode);
+
+    /**
+     * 删除用户
+     * @param userId 用户ID
+     * @return 删除结果
+     */
+    boolean deleteUser(Long userId);
 
     /**
      * 查询用户的角色列表

@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,24 +42,65 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Override
     public boolean register(User user) {
-        // 检查用户名是否已存在
+        return createUser(user, "DEVELOPER");
+    }
+
+    @Override
+    @Transactional
+    public boolean createUser(User user, String roleCode) {
+        if (user == null || user.getUsername() == null || user.getUsername().isBlank() || user.getPassword() == null || user.getPassword().isBlank()) {
+            return false;
+        }
         if (findByUsername(user.getUsername()) != null) {
             return false;
         }
-        
-        // 密码加密
+
+        String finalRoleCode = roleCode == null || roleCode.isBlank() ? "DEVELOPER" : roleCode.trim();
+        Long roleId = userMapper.findRoleIdByCode(finalRoleCode);
+        if (roleId == null) {
+            return false;
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setStatus(1); // 启用用户
+        user.setStatus(user.getStatus() == null ? 1 : user.getStatus());
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
-        
-        return save(user);
+
+        boolean saved = save(user);
+        if (!saved || user.getId() == null) {
+            return false;
+        }
+        return userMapper.insertUserRole(user.getId(), roleId) > 0;
     }
     
     @Override
     public boolean updateUser(User user) {
         user.setUpdateTime(LocalDateTime.now());
         return updateById(user);
+    }
+
+    @Override
+    @Transactional
+    public boolean updateRole(Long userId, String roleCode) {
+        if (userId == null || roleCode == null || roleCode.isBlank()) {
+            return false;
+        }
+        Long roleId = userMapper.findRoleIdByCode(roleCode.trim());
+        if (roleId == null) {
+            return false;
+        }
+        userMapper.deleteUserRoles(userId);
+        return userMapper.insertUserRole(userId, roleId) > 0;
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteUser(Long userId) {
+        if (userId == null) {
+            return false;
+        }
+        userMapper.deleteUserRoles(userId);
+        return removeById(userId);
     }
     
     @Override

@@ -36,9 +36,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     
     @Override
     public boolean createProject(Project project) {
-        // 验证技术栈是否在允许的范围内
-        List<String> allowedTechStacks = List.of("Spring Boot", "SSM", "Spring Cloud");
-        if (!allowedTechStacks.contains(project.getTechStack())) {
+        if (project.getTechStack() == null || project.getTechStack().isBlank()) {
             return false;
         }
         
@@ -69,9 +67,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             return false;
         }
         
-        // 验证技术栈是否在允许的范围内
-        List<String> allowedTechStacks = List.of("Spring Boot", "SSM", "Spring Cloud");
-        if (!allowedTechStacks.contains(project.getTechStack())) {
+        if (project.getTechStack() == null || project.getTechStack().isBlank()) {
             return false;
         }
         
